@@ -76,6 +76,7 @@ class ProjectController:
         # QUERY KE DATABASE
 
     # def getProject(filter):
+    # project_list = [] SELECT * FROM project WHERE <filter>
 
     def deleteProject(self, project_list, project):
         index = project_list.index(project)
@@ -233,7 +234,7 @@ class Utility:
             try:
                 # Format as currency
                 cursor_position = entry.index(INSERT)
-                formatted_value = f"{int(value):,}".replace(",",".")
+                formatted_value = f"{int(value):,}".replace(",", ".")
                 num_commas_before_cursor = (cursor_position - 1) // 3
                 num_commas_after_cursor = len(formatted_value
                                               [:cursor_position + num_commas_before_cursor]) - cursor_position
