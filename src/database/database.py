@@ -2,6 +2,12 @@ import os
 import sqlite3
 
 class DBConnection:
+    """
+        Layer koneksi database SQLite3. Handle koneksi database dan inisialisasi database.
+
+        Validasi input dan pemrosesan data minimal. 
+    """
+
     def __init__(self, db_name='user_data.db'):
         self.db_path = os.path.join('data', 'user', db_name)
 
@@ -46,9 +52,9 @@ class DBConnection:
                 FOREIGN KEY (project_id) REFERENCES projects(project_id)
             );
             """
-            budget_table = """
-            CREATE TABLE IF NOT EXISTS budget (
-                budget_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            expenses_table = """
+            CREATE TABLE IF NOT EXISTS expenses (
+                expense_id INTEGER PRIMARY KEY AUTOINCREMENT,
                 project_id INTEGER,
                 description VARCHAR[1000],
                 amount REAL,
@@ -59,12 +65,13 @@ class DBConnection:
             cur.execute(projects_table)
             cur.execute(tasks_table)
             cur.execute(inspirations_table)
-            cur.execute(budget_table)
+            cur.execute(expenses_table)
             self.con.commit()
             cur.close()
         
         pass
     
+    # Context Manager. Menutup koneksi database ketika keluar dari with statement
     def __enter__(self):
         return self
 
@@ -72,6 +79,7 @@ class DBConnection:
         self.con.close()
     
 
+    """ Operasi CRUD Projects """
     def getAllProjects(self):
         cur = self.con.execute("SELECT * FROM projects")
         result = cur.fetchall()
@@ -103,10 +111,102 @@ class DBConnection:
         self.con.commit()
         cur.close()
         return
+
+    """ Operasi CRUD Tasks """
+    def getAllTasksOfProject(self, project_id):
+        cur = self.con.execute("SELECT * FROM tasks WHERE project_id=?", (project_id,))
+        result = cur.fetchall()
+        cur.close()
+        return result
+    
+    def getTask(self, task_id):
+        cur = self.con.execute("SELECT * FROM tasks WHERE task_id=?", (task_id,))
+        result = cur.fetchall()
+        cur.close()
+        return result
+
+    def createTask(self, project_id, name, description, status, start_date, completion_date, budget):
+        cur = self.con.execute("INSERT INTO tasks (project_id, name, description, status, start_date, completion_date, budget) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                                (project_id, name, description, status, start_date, completion_date, budget))
+        self.con.commit()
+        cur.close()
+        return
+
+    def editTask(self, task_id, project_id, name, description, status, start_date, completion_date, budget):
+        cur = self.con.execute("UPDATE tasks SET project_id=?, name=?, description=?, status=?, start_date=?, completion_date=?, budget=? WHERE task_id=?",
+                                (project_id, name, description, status, start_date, completion_date, budget, task_id))
+        self.con.commit()
+        cur.close()
+        return
+    
+    def deleteTask(self, task_id):
+        cur = self.con.execute("DELETE FROM tasks WHERE task_id=?", (task_id,))
+        self.con.commit()
+        cur.close()
+        return
+    
+    """ Operasi CRUD Inspirations """
+    def getAllInspirations(self):
+        cur = self.con.execute("SELECT * FROM inspirations")
+        result = cur.fetchall()
+        cur.close()
+        return result
+    
+    def getInspirations(self, inspiration_id):
+        cur = self.con.execute("SELECT * FROM inspirations WHERE inspiration_id=?", (inspiration_id,))
+        result = cur.fetchall()
+        cur.close()
+        return result
+    
+    def createInspiration(self, project_id, name, cached_image_path, link):
+        cur = self.con.execute("INSERT INTO inspirations (project_id, name, cached_image_path, link) VALUES (?, ?, ?, ?)",
+                                (project_id, name, cached_image_path, link))
+        self.con.commit()
+        cur.close()
+        return
+    
+    def editInspiration(self, inspiration_id, project_id, name, cached_image_path, link):
+        cur = self.con.execute("UPDATE inspirations SET project_id=?, name=?, cached_image_path=?, link=? WHERE inspiration_id=?",
+                                (project_id, name, cached_image_path, link, inspiration_id))
+        self.con.commit()
+        cur.close()
+        return
+    
+    def deleteInspiration(self, inspiration_id):
+        cur = self.con.execute("DELETE FROM inspirations WHERE inspiration_id=?", (inspiration_id,))
+        self.con.commit()
+        cur.close()
+    
+    """ Operasi CRUD Expenses """
+    def getAllExpensesOfProject(self, project_id):
+        cur = self.con.execute("SELECT * FROM expenses WHERE project_id=?", (project_id,))
+        result = cur.fetchall()
+        cur.close()
+        return result
+    
+    def createExpense(self, project_id, description, amount):
+        cur = self.con.execute("INSERT INTO expenses (project_id, description, amount) VALUES (?, ?, ?)",
+                                (project_id, description, amount))
+        self.con.commit()
+        cur.close()
+        return
+    
+    def editExpense(self, expense_id, project_id, description, amount):
+        cur = self.con.execute("UPDATE expenses SET project_id=?, description=?, amount=? WHERE expense_id=?",
+                                (project_id, description, amount, expense_id))
+        self.con.commit()
+        cur.close()
+        return
+    
+    def deleteExpense(self, expense_id):
+        cur = self.con.execute("DELETE FROM expenses WHERE expense_id=?", (expense_id,))
+        self.con.commit()
+        cur.close()
+        return
     
 
 if __name__=='__main__':
-    with DBConnection('tests.db') as db:
+    with DBConnection('test.db') as db:
         db.createProject('Project 1', 'Description 1', 'Ongoing', '2021-01-01', '2021-12-31', 1000000)
         db.createProject('Project 3', 'Description 2', 'Ongoing', '2021-01-01', '2021-12-31', 2000000)
         c = db.con.cursor()
