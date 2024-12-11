@@ -1,5 +1,6 @@
 from customtkinter import *  # noqa: F403
 from PIL import Image
+import src.database.database as db
 # from tkcalendar import Calendar
 
 
@@ -56,33 +57,65 @@ class Project:
         self.budget = newBudget
 
 
+# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> PROJECT CONTROLLER <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 class ProjectController:
-    def saveProject(self, project_list, project):
+    def __init__(self):
+        self.db = db.DBConnection()
+
+    def saveProject(self, project_list: list[Project], project: Project):
+        name = project.getName()
+        description = project.getDescription()
+        status = project.getStatus()
+        start_date = project.getStartDate()
+        completion_date = project.getDeadline()
+        budget = project.getBudget()
+
         if (project not in project_list):  # Create new
 
             # Cari id tertinggi dan tambah 1
-            project.id = max(project_list, key=lambda
-                             project: project.id).id + 1
-            index = len(project_list) - 1
+            if (len(project_list) == 0):
+                project.id = 1
+            else:
+                project.id = max(project_list, key=lambda
+                                 project: project.id).id, + 1
+            index = len(project_list)
             project_list.append(project)
+
+            # def createProject(self, name, description, status, start_date, completion_date, budget):
+            self.db.createProject(name, description, status, start_date, completion_date, budget)
+
         else:
             index = project_list.index(project)
             project_list[index] = project
-        # // UPDATE DATABASE
+            self.db.editProject(project.getId(), name, description, status, start_date, completion_date, budget)
 
-    # def getAllProjects():
-        # project_list = [] SELECT * FROM project
-        # return poject_list
-        # QUERY KE DATABASE
+    def getAllProjects(self):
+        result = self.db.getAllProjects()
+        project_list = []
+        for row in result:
+            project = Project()
+            project.id = row[0]
+            project.name = row[1]
+            project.description = row[2]
+            project.status = row[3]
+            project.start_date = row[4]
+            project.deadline = row[5]
+            project.budget = row[6]
+            project_list.append(project)
 
-    # def getProject(filter):
-    # project_list = [] SELECT * FROM project WHERE <filter>
+        return project_list
 
-    def deleteProject(self, project_list, project):
+    # def getProject(self, project: Project, filter):
+    #     self.db.getProjects(project.getId())
+
+    def deleteProject(self, project_list: list[Project], project: Project):
         index = project_list.index(project)
         del project_list[index]
 
+        self.db.deleteProject(project.getId())
 
+
+# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>  PROJECT FORM <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 class ProjectForm():
     def __init__(self, master: CTk, controller: ProjectController):
         self.master = master
@@ -98,24 +131,35 @@ class ProjectForm():
 
         self.modal_window = CTkToplevel(self.master)
         self.modal_window.grab_set()
-        form_label = CTkLabel(self.modal_window, text=header, anchor=N)
+        self.modal_window.minsize(400, 450)
+        form_frame = CTkFrame(self.modal_window)
+        form_frame.place(relx=0.5, rely=0.1, anchor=N)
+        form_label = CTkLabel(form_frame, text=header, anchor=N, font=("Arial", 20))
         form_label.grid(row=1, columnspan=2, pady=10)
 
         for i, field in enumerate(fields):
-            label = CTkLabel(self.modal_window, text=field)
+            label = CTkLabel(form_frame, text=field)
             label.grid(row=i + 2, column=0, padx=10, pady=5, sticky="w")
-            entry = CTkEntry(self.modal_window, width=200)
-            entry.grid(row=i + 2, column=1, padx=10, pady=5)
+
+            if (field == "Description"):
+                insert = 1.0
+                entry = CTkTextbox(form_frame, width=200, height=100)
+                entry.grid(row=i + 2, column=1, padx=10, pady=5)
+            else:
+                insert = 0
+                entry = CTkEntry(form_frame, width=200, border_width=0)
+                entry.grid(row=i + 2, column=1, padx=10, pady=5)
 
             key = field.lower().replace(" ", "_")
             self.entries[key] = entry
-            entry.insert(0, getattr(project, key, ""))
+            entry.insert(insert, getattr(project, key, ""))
+
             if (key == "budget"):
                 if (getattr(project, key, "") == 0):
                     entry.delete(0, END)
                 entry.bind("<KeyRelease>", lambda event: Utility.format_currency(entry))
 
-        button_submit = CTkButton(self.modal_window, text="Submit",
+        button_submit = CTkButton(form_frame, text="Submit",
                                   command=lambda: self.inputProjectForm(project_list, project))
         button_submit.grid(row=i + 3, pady=10, columnspan=2)
 
@@ -130,10 +174,10 @@ class ProjectForm():
             button_submit.grid(pady=10)
             return
         project.setName(self.entries["name"].get())
-        project.setDescription(self.entries["description"].get())
+        project.setDescription(self.entries["description"].get("1.0", END).strip())
         project.setStartDate(self.entries["start_date"].get())
         project.setDeadline(self.entries["end_date"].get())
-        project.setBudget(int(self.entries["budget"].get()))
+        project.setBudget(int(self.entries["budget"].get().replace('.', '')))
 
         self.controller.saveProject(project_list, project)
         self.closeProjectForm()
@@ -158,7 +202,7 @@ class ProjectForm():
     def validateInput(self):
         if not self.entries["name"].get().strip():
             return "Project name is required."
-        if not self.entries["budget"].get().isdigit():
+        if not self.entries["budget"].get().replace('.', '').isdigit():
             return "Budget must be a number."
         return None  # No errors
 
@@ -166,6 +210,7 @@ class ProjectForm():
         self.modal_window.destroy()
 
 
+# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> PROJECT LIST <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 class ProjectList:
     def __init__(self, master: CTk, form: ProjectForm):
         self.master = master
@@ -176,7 +221,7 @@ class ProjectList:
         self.proj_list = p_list
         self.prev_list = p_list.copy()
         self.frame = CTkFrame(self.master)
-        self.frame.grid(pady=20, padx=20)
+        self.frame.place(relx=0.5, rely=0.1, anchor=N)
         self.updateUI()
         self.watchProjectList()
 
@@ -186,17 +231,24 @@ class ProjectList:
             self.updateUI()
         self.master.after(500, self.watchProjectList)
 
-    def updateUI(self):
+    def updateUI(self) -> None:
         for widget in self.frame.winfo_children():
             widget.destroy()
 
-        pencil = CTkImage(light_image=Image.open("../../img/penico.png"), size=(16, 16))
-        trash = CTkImage(light_image=Image.open("../../img/trashico.png"), size=(16, 16))
-        plus = CTkImage(light_image=Image.open("../../img/plusico.png"), size=(16, 16))
+        if (len(self.proj_list) == 0):
+            no_project_label = CTkLabel(self.frame, text="No Projects to show")
+            no_project_label.grid(row=0, column=0, padx=10)
+            idx = 0
+
+        pencil = CTkImage(light_image=Image.open("img/penico.png"), size=(16, 16))
+        trash = CTkImage(light_image=Image.open("img/trashico.png"), size=(16, 16))
+        plus = CTkImage(light_image=Image.open("img/plusico.png"), size=(16, 16))
 
         for idx, project in enumerate(self.proj_list):
-            label = CTkLabel(self.frame, text=f"{project.name}", anchor=E)
-            label.grid(row=idx, column=0, padx=50)
+            button_details = CTkButton(self.frame, text=f"{project.name}", anchor=W,
+                                       command=lambda: self.showProjectDetails(project),
+                                       fg_color=self.frame.cget("fg_color"))
+            button_details.grid(row=idx, column=0)
             button_edit = CTkButton(self.frame, text="", image=pencil, width=5, command=lambda: self.edit(self.proj_list, project))  # noqa
             button_edit.grid(row=idx, column=1)
             delete_button = CTkButton(self.frame, text="", image=trash, width=5, command=lambda: self.delete(self.proj_list, project))  # noqa
@@ -204,6 +256,29 @@ class ProjectList:
 
         button_add = CTkButton(self.frame, text="", image=plus, width=68, command=lambda: self.create(self.proj_list))
         button_add.grid(row=idx + 1, column=1, columnspan=2)
+
+    def showProjectDetails(self, project: Project):
+        self.frame.destroy()
+        self.frame = CTkFrame(self.master)
+        self.frame.place(relx=0.5, rely=0.1, anchor=N)
+
+        button_back = CTkButton(self.frame, text="<", width=50, command=lambda: (self.frame.destroy(),self.showProjects(self.proj_list)), font=("", 20))  # noqa
+        button_back.place(relx=0.1, rely=0.1)
+
+        details_frame = CTkFrame(self.frame)
+        details_frame.place(relx=0.5, rely=0.1)
+
+        title = CTkLabel(details_frame, text=project.name)
+        desc = CTkLabel(details_frame, text=project.description)
+        start = CTkLabel(details_frame, text=f"Start: {project.start_date}")
+        end = CTkLabel(details_frame, text=f"End: {project.deadline}")
+        budget = CTkLabel(details_frame, text=f"Budget: {project.budget}")
+
+        title.grid(row=0, column=0, columnspan=2)
+        desc.grid(row=1, column=0, columnspan=2)
+        start.grid(row=2, column=0, columnspan=1)
+        end.grid(row=2, column=1, columnspan=1)
+        budget.grid(row=3, column=0, columnspan=2)
 
     def create(self, project_list: list[Project]):
         project = Project()
@@ -243,3 +318,7 @@ class Utility:
                 entry.icursor(cursor_position + num_commas_after_cursor)
             except ValueError:
                 pass
+
+    def format_currency_int(budget: int) -> str:
+        formatted = f"{budget:,}".replace(",", ".")
+        return "Rp" + formatted
