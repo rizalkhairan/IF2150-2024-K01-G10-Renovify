@@ -22,6 +22,7 @@ class DisplayTimeline:
             return
 
         # Membuat window untuk kalender
+        self.master.withdraw()  # Menyembunyikan window master
         self.modal_window = ctk.CTkToplevel(self.master)
         self.modal_window.grab_set()
         self.modal_window.title("Project Timeline")
@@ -67,13 +68,19 @@ class DisplayTimeline:
     # Menampilkan detail timeline proyek di bawah kalender
     def updateProjectInfo(self):
         projects_dates = self.timeline_controller.getAllProjectDates()
+        unique_projects = set()  # Menggunakan set untuk menghindari duplikasi
         project_details = ""
 
         for project in projects_dates:
             name, start_date, end_date = project
-            project_details += f"Project {name}\n"
-            project_details += f"Starting date: {start_date}\n"
-            project_details += f"Completion date: {end_date}\n\n"
+            project_key = (name, start_date, end_date)
+            if project_key not in unique_projects:
+                unique_projects.add(project_key)
+                start_date_word = self.format_date_to_words(start_date)
+                end_date_word = self.format_date_to_words(end_date)
+                project_details += f"'{name}'\n"
+                project_details += f"Starting date: {start_date_word}\n"
+                project_details += f"Completion date: {end_date_word}\n\n"
 
         self.project_info_text.delete(1.0, "end")
         self.project_info_text.insert("insert", project_details)
@@ -92,18 +99,30 @@ class DisplayTimeline:
                                                        "%Y-%m-%d").date()
         ]
 
-        if projects_on_selected_date:
+        unique_projects = set()  # Menggunakan set untuk menghindari duplikasi
+        filtered_projects = []
+
+        for project in projects_on_selected_date:
+            name, start_date, end_date = project
+            project_key = (name, start_date, end_date)
+            if project_key not in unique_projects:
+                unique_projects.add(project_key)
+                filtered_projects.append(project)
+
+        if filtered_projects:
             project_details = "\n".join(
-                [f"Project '{
-                        project[0]
-                        }'is scheduled from {project[1]} to {project[2]}"
-                    for project in projects_on_selected_date]
+                [
+                    f"'{project[0]}' is scheduled from "
+                    f"{self.format_date_to_words(project[1])} to "
+                    f"{self.format_date_to_words(project[2])}"
+                    for project in filtered_projects
+                ]
             )
             self.showNotification(f"Projects on {selected_date}",
                                   project_details)
         else:
             self.showNotification("No Project",
-                                  "No project scheduled on this date.")
+                                  "No project scheduled for this date.")
 
     # Menampilkan pop-up untuk jadwal proyek pada tanggal yang diklik
     def showNotification(self, title, message):
@@ -132,6 +151,18 @@ class DisplayTimeline:
         close_button = ctk.CTkButton(popup, text="Close",
                                      command=popup.destroy)
         close_button.pack(pady=10)
+
+    # Mengubah format YYYY-MM-DD menjadi string tanggal
+    def format_date_to_words(self, date_str):
+        date_obj = datetime.strptime(date_str, '%Y-%m-%d')
+        day = date_obj.day
+        month = date_obj.strftime('%B')
+        year = date_obj.year
+        if 4 <= day <= 20 or 24 <= day <= 30:
+            suffix = 'th'
+        else:
+            suffix = {1: 'st', 2: 'nd', 3: 'rd'}.get(day % 10, 'th')
+        return f"{month} {day}{suffix} {year}"
 
 
 class TimelineController:
