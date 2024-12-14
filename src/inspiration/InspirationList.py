@@ -78,15 +78,19 @@ class InspirationList:
         self.controller.editInspirationForm(inspiration_id)
 
     def delete(self, inspiration_id: int):
-        self.confirmation_window = ctk.CTkToplevel(width=200, height=100)
+        self.confirmation_window = ctk.CTkToplevel()
         self.confirmation_window.attributes("-topmost", True)
         self.confirmation_window.title("Are you sure?")
         self.confirmation_window.grid_columnconfigure(0, weight=1)
-        
-        self.confirm_button = ctk.CTkButton(self.confirmation_window, text="Yes", width=50, height=30, command=lambda: self.confirm_delete(inspiration_id))
-        self.confirm_button.grid(row=0, column=0, padx=5)
-        self.cancel_button = ctk.CTkButton(self.confirmation_window, text="No", width=50, height=30, command=self.cancel_delete)
-        self.cancel_button.grid(row=0, column=1, padx=5)
+        self.confirmation_window.geometry("250x50")
+
+        button_frame = ctk.CTkFrame(self.confirmation_window, fg_color='transparent')
+        button_frame.grid(row=0, column=0)
+
+        self.confirm_button = ctk.CTkButton(button_frame, text="Yes", width=10, height=30, command=lambda: self.confirm_delete(inspiration_id))
+        self.confirm_button.grid(row=0, column=0, sticky='ew', pady=10, padx=20)
+        self.cancel_button = ctk.CTkButton(button_frame, text="No", width=10, height=30, command=self.cancel_delete)
+        self.cancel_button.grid(row=0, column=1, sticky='ew', pady=10, padx=20)
 
     def confirm_delete(self, inspiration_id: int):
         self.controller.deleteInspiration(inspiration_id)
