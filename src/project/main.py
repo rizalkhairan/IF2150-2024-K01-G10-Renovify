@@ -6,7 +6,7 @@ from src.project.project_form import ProjectForm
 from src.project.project_list import ProjectList
 
 
-set_default_color_theme("green")
+set_default_color_theme("blue")
 
 # for i in range(1, 6):
 #     project = pr.Project()
@@ -25,21 +25,17 @@ def move_focus(event):
 
 
 root = CTk()
-root.geometry("500x500")
+root.geometry("700x550")
 default_font = CTkFont(family="Helvetica", size=50)
 
 # def main():
-controller = ProjectController()
-project_list = controller.getAllProjects()
-form = ProjectForm(root, controller)
-project = Project()
 
-project_display = ProjectList(root, form)
-project_display.showProjects(project_list)
+project = Project()
+project_display = ProjectList(root)
+project_display.showProjects()
 
 
 # cal = Calendar(root, selectmode="day", year=2024, month=12, day=4)
 # cal.pack(pady=20)
 
 root.mainloop()
-

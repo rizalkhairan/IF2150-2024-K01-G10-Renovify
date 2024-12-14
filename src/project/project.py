@@ -8,6 +8,9 @@ class Project:
         self.deadline: str = ""
         self.budget: int = 0
 
+    def __repr__(self):
+        return f"Project ID: {self.id}\nName: {self.name}"
+
     def getId(self):
         return self.id
 

@@ -5,15 +5,16 @@ from src.project.project import Project
 
 
 class ProjectForm():
-    def __init__(self, master: CTk, controller: ProjectController):
+    def __init__(self, master: CTk):
         self.master = master
-        self.controller = controller
+        self.controller = ProjectController()
         self.entries = {}
 
     def createProjectForm(self, project_list: list[Project], project: Project):
         fields = ["Name", "Description", "Start Date", "End Date", "Budget"]
         if (not project.id):  # Jika proyek belum ada
             header = "Create new Project"
+            project.status = False
         else:
             header = "Edit Project"
 
@@ -42,13 +43,7 @@ class ProjectForm():
             self.entries[key] = entry
             entry.insert(insert, getattr(project, key, ""))
 
-            if (key == "budget"):
-                if (getattr(project, key, "") == 0):
-                    entry.delete(0, END)
-                entry.bind("<KeyRelease>", lambda event: Utility.format_currency(entry))
-
-            if (key == "start_date" or key == "end_date"):
-                entry.configure(placeholder_text="DD-MM-YYYY")
+            self.configureEntry(entry, key)
 
         button_submit = CTkButton(form_frame, text="Submit",
                                   command=lambda: self.inputProjectForm(project_list, project))
@@ -95,10 +90,21 @@ class ProjectForm():
             return "Project name is required."
         if not self.entries["budget"].get().replace('.', '').isdigit():
             return "Budget must be a number."
+        
         return None  # No errors
 
     def closeProjectForm(self):
         self.modal_window.destroy()
-    
+
     def configureEntry(self, entry: CTkEntry, key: str):
-        entry.configure
+        if (key == "budget"):
+            if entry.get() == '0':
+                entry.delete(0, END)
+            entry.bind("<KeyRelease>", lambda event: Utility.format_currency(entry))
+            entry.configure(placeholder_text="Rp.100.000.000")
+
+        if (key == "start_date" or key == "end_date"):
+            entry.configure(placeholder_text="DD-MM-YYYY")
+
+        if (key == "name"):
+            entry.configure(placeholder_text="Home Project")

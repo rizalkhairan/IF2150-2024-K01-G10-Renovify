@@ -54,3 +54,8 @@ class Utility:
         newfile = "../../img/" + input("Enter output file name: ")
 
         resized.save(newfile)
+
+    def resize_frame(root, frame: CTkFrame):
+        frame_width = int(root.winfo_width() * 0.8)
+        frame_height = int(root.winfo_height() * 0.8)
+        frame.configure(width=frame_width, height=frame_height)

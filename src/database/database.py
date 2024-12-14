@@ -86,6 +86,12 @@ class DBConnection:
         cur.close()
         return result
 
+    def getFilteredProjects(self, query, params):
+        cur = self.con.execute(query, params)  # Execute the query
+        result = cur.fetchall()
+        cur.close()
+        return result
+
     def getProjects(self, project_id):
         cur = self.con.execute("SELECT * FROM projects WHERE project_id=?", (project_id,))
         result = cur.fetchall()
