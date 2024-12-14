@@ -13,6 +13,7 @@ from tkinter import ttk
 from datetime import datetime
 from src.inspiration.InspirationController import InspirationController
 from src.timeline.timeline import DisplayTimeline, TimelineController
+from src.budget.budget import ShowBudget, BudgetController, ExpenseController, ExpenseForm, ExpenseList
 
 class App(CTk):
     def __init__(self):
@@ -28,6 +29,11 @@ class App(CTk):
         self.timeline_controller = TimelineController(db_path)
         self.timeline_view = DisplayTimeline(self, self.timeline_controller)
         self.inspiration_controller = InspirationController(master=self)
+        self.expense_controller = ExpenseController(master=self)
+        self.expense_form = ExpenseForm(self, self.expense_controller)
+        self.expense_list = ExpenseList(self, self.expense_controller)
+        self.budget_controller = BudgetController(db_path)
+        self.budget_view = ShowBudget(self, self.budget_controller)
 
 
         # Navbar container (frame)
@@ -63,7 +69,11 @@ class App(CTk):
         self.inspiration_controller.showAllInspirations()
 
     def open_budget(self):
-        print("Opening Budget section...")
+        # self.inspiration_controller.showAllInspirations()
+        self.budget_view.displayAllProjectsBudget()
+        self.expense_list.showExpenses()
+        self.expense_form.createExpenseForm()
+        # print("Opening Budget section...")
 
     def open_timeline(self):
         # Membuka tampilan timeline
