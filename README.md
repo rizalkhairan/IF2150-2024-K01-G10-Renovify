@@ -46,9 +46,12 @@ Renovify is an application implemented in Python that help users to organize hou
 ### Project Structure
 ```ssh
 .
-├── data
-│   └── user
-│       └── test.db
+├── docs
+│   ├── inspiration_edit.png
+│   ├── inspiration_menu.png
+│   ├── inspiration_menu_empty.png
+│   ├── inspiration_menu_pages.png
+│   └── welcome_screen.png
 ├── img
 │   ├── logo.jpg
 │   ├── penico.png
