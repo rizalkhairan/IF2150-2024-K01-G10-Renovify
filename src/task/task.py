@@ -58,6 +58,9 @@ class Task:
 
     def setId(self, newId):
         self.taskId = newId
+    
+    def setProjectId(self, newId):
+        self.projectId = newId
 
     def setName(self, newName):
         self.name = newName
@@ -87,11 +90,28 @@ class TaskController:
     def __init__(self):
         self.db = db.DBConnection()
 
-    def getTaskIndex(self, task_list, task_id):
-        for task in task_list:
-            if(Task.getTaskId(task) == task_id):
-                return task
-    
+    def getAllTasks(self):
+        task_list = []
+        result = self.db.getAllTasksOfProject() 
+        for row in result:
+            task = Task()  
+            task.setTaskId(row[0]) 
+            task.setName(row[1]) 
+            task.setDescription(row[2]) 
+            task.setStartDate(row[3])  
+            task.setDeadline(row[4]) 
+            task.setCompletionDate(row[5])  
+            task.setStatus(row[6])  
+            task.setBudget(row[7])  # 
+            
+            
+            tags = self.db.getAllTagsForTask(task.getTaskId())  
+            task.setTags(tags)
+            
+            task_list.append(task)
+        
+        return task_list
+
     def saveTask(self, task_list: list[Task], task: Task):
         project_id = task.getProjectId()
         name = task.getName()
@@ -109,8 +129,9 @@ class TaskController:
             task_list.append(task)
             self.db.createTask(project_id, name, description, status, start_date, completion_date, budget)
         else:
-            edited_task = TaskController.getTaskIndex(task_list, task.taskId) 
-            self.db.editTask(edited_task.getProjectId(), edited_task.getName(), edited_task.getDescription(), edited_task.getStatus(), edited_task.getStartDate(), edited_task.getCompletionDate(), edited_task.getBudget(), task.taskId)
+            index = task_list.index(task)
+            task_list[index] = task
+            self.db.editTask(project_id, name, description, status, start_date, completion_date, budget, task.taskId)
 
     def deleteTask(self, task_list: list[Task], task: Task):
         index = task_list.index(task)
@@ -252,13 +273,20 @@ class TaskForm():
         self.modal_window.destroy()
 
 class TaskList:
-    def __init__(self, master: CTk, form: TaskForm):
+    def __init__(self, master: CTk, form: TaskForm, controller: TaskController):
         self.master = master
         self.form = form
+        self.controller = controller
 
-    def showTasks(self, p_list: list[Task]):
-        self.task_list = p_list
-        self.prev_list = p_list.copy()
+    def showTasks(self):
+        # Mendapatkan semua task dari controller
+        task_list = self.controller.getAllTasks()  # Memanggil fungsi getAllTasks() dari TaskController
+
+        # Menyimpan daftar task di dalam instance
+        self.task_list = task_list
+        self.prev_list = task_list.copy()
+        
+        # Membuat UI dengan daftar task yang sudah didapatkan
         self.frame = CTkFrame(self.master)
         self.frame.place(relx=0.5, rely=0.1, anchor=N)
         self.updateUI()
@@ -339,14 +367,14 @@ class TaskList:
         button_add.grid(row=idx + 1, column=0, columnspan=4, pady=10, padx=10)
 
     def updateTaskStatus(self, event, task: Task):
+        # Mendapatkan status yang dipilih dari dropdown
         status_str = event.widget.get()
         status_choices = ["Not Started", "In Progress", "Completed"]
-        new_status = status_choices.index(status_str)
+        new_status = status_choices.index(status_str)  # Mendapatkan index untuk status
 
+        # Update status task
         task.setStatus(new_status)
-        self.controller.saveTask(self.task_list, task)
-        self.updateUI()
-
+        self.updateUI()  # Menyegarkan tampilan setelah perubahan status
 
     def showTaskDetails(self, task: Task):
         self.frame.destroy()
@@ -412,23 +440,21 @@ class Utility:
         formatted = f"{budget:,}".replace(",", ".")
         return "Rp" + formatted
 
-if __name__ == "__main__":
-    root = CTk()
-    root.title("Task Manager")
-    root.geometry("800x600")  
-    style = ttk.Style(root)
-    style.configure("Custom.DateEntry",
-                    background="white",
-                    foreground="black",
-                    fieldbackground="lightblue",
-                    font=("Arial", 12),
-                    arrowcolor="blue")
+# if __name__ == "__main__":
+#     root = CTk()
+#     root.title("Task Manager")
+#     root.geometry("800x600")  
+#     style = ttk.Style(root)
+#     style.configure("Custom.DateEntry",
+#                     background="white",
+#                     foreground="black",
+#                     fieldbackground="lightblue",
+#                     font=("Arial", 12),
+#                     arrowcolor="blue")
     
-    controller = TaskController()
-    form = TaskForm(master=root, controller=controller)
-    task_list = TaskList(master=root, form=form)
-
-    tasks = controller.db.getAllTasksOfProject()  
-    task_list.showTasks(tasks)
-    
-    root.mainloop()
+#     controller = TaskController()
+#     form = TaskForm(master=root, controller=controller)
+#     task_list = TaskList(master=root, form=form)
+#     tasks = []  
+#     task_list.showTasks(tasks)
+#     root.mainloop()
