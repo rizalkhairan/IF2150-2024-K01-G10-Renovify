@@ -95,6 +95,12 @@ class DBConnection:
         cur.close()
         return result
 
+    def getFilteredProjects(self, query, params):
+        cur = self.con.execute(query, params)  # Execute the query
+        result = cur.fetchall()
+        cur.close()
+        return result
+
     def getProjects(self, project_id):
         cur = self.con.execute("SELECT * FROM projects WHERE project_id=?", (project_id,))
         result = cur.fetchall()
@@ -167,6 +173,17 @@ class DBConnection:
         cur.close()
         return result
     
+    def createInspiration(self, project_id, name, cached_image_path, link):
+        cur = self.con.execute("INSERT INTO inspirations (project_id, name, cached_image_path, link) VALUES (?, ?, ?, ?)",
+                                (project_id, name, cached_image_path, link))
+        self.con.commit()
+        cur.close()
+        return
+    
+    def editInspiration(self, inspiration_id, project_id, name, cached_image_path, link):
+        cur = self.con.execute("UPDATE inspirations SET project_id=?, name=?, cached_image_path=?, link=? WHERE inspiration_id=?",
+                                (project_id, name, cached_image_path, link, inspiration_id))
+
     def createInspiration(self, name, cached_image_path, link, date_updated):
         cur = self.con.execute("INSERT INTO inspirations (name, cached_image_path, link, date_updated) VALUES (?, ?, ?, ?)",
                                 (name, cached_image_path, link, date_updated))
