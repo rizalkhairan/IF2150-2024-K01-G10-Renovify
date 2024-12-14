@@ -75,9 +75,9 @@ class InspirationController:
         inspiration_form.showInspirationForm(inspiration_id)
 
 
-if __name__=='__main__':
-    main_frame = ctk.CTk()
-    main_frame.geometry("800x600")
-    controller = InspirationController(main_frame)
-    controller.showAllInspirations()
-    main_frame.mainloop()
+# if __name__=='__main__':
+#     main_frame = ctk.CTk()
+#     main_frame.geometry("800x600")
+#     controller = InspirationController(main_frame)
+#     controller.showAllInspirations()
+#     main_frame.mainloop()

@@ -1,8 +1,8 @@
 import customtkinter as ctk
 from PIL import Image
-from Inspiration import Inspiration
 from functools import partial
 import webbrowser
+from .Inspiration import Inspiration
 
 class InspirationList:
     def __init__(self, master: ctk.CTk, controller):
