@@ -87,6 +87,11 @@ class TaskController:
     def __init__(self):
         self.db = db.DBConnection()
 
+    def getTaskIndex(self, task_list, task_id):
+        for task in task_list:
+            if(Task.getTaskId(task) == task_id):
+                return task
+    
     def saveTask(self, task_list: list[Task], task: Task):
         project_id = task.getProjectId()
         name = task.getName()
@@ -104,9 +109,8 @@ class TaskController:
             task_list.append(task)
             self.db.createTask(project_id, name, description, status, start_date, completion_date, budget)
         else:
-            index = task_list.index(task)
-            task_list[index] = task
-            self.db.editTask(project_id, name, description, status, start_date, completion_date, budget, task.taskId)
+            edited_task = TaskController.getTaskIndex(task_list, task.taskId) 
+            self.db.editTask(edited_task.getProjectId(), edited_task.getName(), edited_task.getDescription(), edited_task.getStatus(), edited_task.getStartDate(), edited_task.getCompletionDate(), edited_task.getBudget(), task.taskId)
 
     def deleteTask(self, task_list: list[Task], task: Task):
         index = task_list.index(task)
@@ -335,14 +339,14 @@ class TaskList:
         button_add.grid(row=idx + 1, column=0, columnspan=4, pady=10, padx=10)
 
     def updateTaskStatus(self, event, task: Task):
-        # Mendapatkan status yang dipilih dari dropdown
         status_str = event.widget.get()
         status_choices = ["Not Started", "In Progress", "Completed"]
-        new_status = status_choices.index(status_str)  # Mendapatkan index untuk status
+        new_status = status_choices.index(status_str)
 
-        # Update status task
         task.setStatus(new_status)
-        self.updateUI()  # Menyegarkan tampilan setelah perubahan status
+        self.controller.saveTask(self.task_list, task)
+        self.updateUI()
+
 
     def showTaskDetails(self, task: Task):
         self.frame.destroy()
@@ -423,6 +427,8 @@ if __name__ == "__main__":
     controller = TaskController()
     form = TaskForm(master=root, controller=controller)
     task_list = TaskList(master=root, form=form)
-    tasks = []  
+
+    tasks = controller.db.getAllTasksOfProject()  
     task_list.showTasks(tasks)
+    
     root.mainloop()
