@@ -58,6 +58,9 @@ class Task:
 
     def setId(self, newId):
         self.taskId = newId
+    
+    def setProjectId(self, newId):
+        self.projectId = newId
 
     def setName(self, newName):
         self.name = newName
@@ -86,6 +89,28 @@ class Task:
 class TaskController:
     def __init__(self):
         self.db = db.DBConnection()
+
+    def getAllTasks(self):
+        task_list = []
+        result = self.db.getAllTasksOfProject() 
+        for row in result:
+            task = Task()  
+            task.setTaskId(row[0]) 
+            task.setName(row[1]) 
+            task.setDescription(row[2]) 
+            task.setStartDate(row[3])  
+            task.setDeadline(row[4]) 
+            task.setCompletionDate(row[5])  
+            task.setStatus(row[6])  
+            task.setBudget(row[7])  # 
+            
+            
+            tags = self.db.getAllTagsForTask(task.getTaskId())  
+            task.setTags(tags)
+            
+            task_list.append(task)
+        
+        return task_list
 
     def saveTask(self, task_list: list[Task], task: Task):
         project_id = task.getProjectId()
@@ -248,13 +273,20 @@ class TaskForm():
         self.modal_window.destroy()
 
 class TaskList:
-    def __init__(self, master: CTk, form: TaskForm):
+    def __init__(self, master: CTk, form: TaskForm, controller: TaskController):
         self.master = master
         self.form = form
+        self.controller = controller
 
-    def showTasks(self, p_list: list[Task]):
-        self.task_list = p_list
-        self.prev_list = p_list.copy()
+    def showTasks(self):
+        # Mendapatkan semua task dari controller
+        task_list = self.controller.getAllTasks()  # Memanggil fungsi getAllTasks() dari TaskController
+
+        # Menyimpan daftar task di dalam instance
+        self.task_list = task_list
+        self.prev_list = task_list.copy()
+        
+        # Membuat UI dengan daftar task yang sudah didapatkan
         self.frame = CTkFrame(self.master)
         self.frame.place(relx=0.5, rely=0.1, anchor=N)
         self.updateUI()
@@ -408,21 +440,21 @@ class Utility:
         formatted = f"{budget:,}".replace(",", ".")
         return "Rp" + formatted
 
-if __name__ == "__main__":
-    root = CTk()
-    root.title("Task Manager")
-    root.geometry("800x600")  
-    style = ttk.Style(root)
-    style.configure("Custom.DateEntry",
-                    background="white",
-                    foreground="black",
-                    fieldbackground="lightblue",
-                    font=("Arial", 12),
-                    arrowcolor="blue")
+# if __name__ == "__main__":
+#     root = CTk()
+#     root.title("Task Manager")
+#     root.geometry("800x600")  
+#     style = ttk.Style(root)
+#     style.configure("Custom.DateEntry",
+#                     background="white",
+#                     foreground="black",
+#                     fieldbackground="lightblue",
+#                     font=("Arial", 12),
+#                     arrowcolor="blue")
     
-    controller = TaskController()
-    form = TaskForm(master=root, controller=controller)
-    task_list = TaskList(master=root, form=form)
-    tasks = []  
-    task_list.showTasks(tasks)
-    root.mainloop()
+#     controller = TaskController()
+#     form = TaskForm(master=root, controller=controller)
+#     task_list = TaskList(master=root, form=form)
+#     tasks = []  
+#     task_list.showTasks(tasks)
+#     root.mainloop()
