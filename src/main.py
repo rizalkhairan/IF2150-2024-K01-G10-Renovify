@@ -14,7 +14,7 @@ from datetime import datetime
 from src.inspiration.InspirationController import InspirationController
 from src.timeline.timeline import DisplayTimeline, TimelineController
 from src.project.project_list import ProjectList
-from src.budget.budget import ShowBudget, BudgetController, ExpenseController, ExpenseForm, ExpenseList
+# from src.budget.budget import ShowBudget, ExpenseController, ExpenseForm, ExpenseList
 
 class App(CTk):
     def __init__(self):
@@ -23,17 +23,16 @@ class App(CTk):
         self.geometry("800x600")
 
         base_dir = os.path.dirname(os.path.abspath(__file__)) 
-        db_path = os.path.join(base_dir, "../database/your_database_file.db") 
         
         self.project_view = ProjectList(master=self)
         self.timeline_controller = TimelineController()
         self.timeline_view = DisplayTimeline(self, self.timeline_controller)
         self.inspiration_controller = InspirationController(master=self)
-        self.expense_controller = ExpenseController(master=self)
-        self.expense_form = ExpenseForm(self, self.expense_controller)
-        self.expense_list = ExpenseList(self, self.expense_controller)
-        self.budget_controller = BudgetController(db_path)
-        self.budget_view = ShowBudget(self, self.budget_controller)
+        # self.expense_controller = ExpenseController()
+        # self.expense_form = ExpenseForm(self, self.expense_controller)
+        # self.expense_list = ExpenseList(self, self.expense_controller)
+        # self.budget_controller = BudgetController()
+        # self.budget_view = ShowBudget(self, self.budget_controller)
 
         img_path = os.path.join(base_dir, "../img/renovify.png") 
         self.image = Image.open(img_path) 
@@ -73,10 +72,11 @@ class App(CTk):
 
     def open_budget(self):
         # self.inspiration_controller.showAllInspirations()
-        self.budget_view.displayAllProjectsBudget()
-        self.expense_list.showExpenses()
-        self.expense_form.createExpenseForm()
+        # self.budget_view.displayAllProjectsBudget()
+        # self.expense_list.showExpenses()
+        # self.expense_form.createExpenseForm()
         # print("Opening Budget section...")
+        pass
 
     def open_timeline(self):
         self.timeline_view.displayMarkedCalendar()
