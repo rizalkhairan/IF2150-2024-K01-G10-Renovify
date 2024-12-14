@@ -50,13 +50,11 @@ class ProjectList:
                                         fg_color=self.frame.cget("fg_color"), font=("", 20), width=550)
             no_project_label.grid(row=0, column=0, padx=10)
             idx = 0
-
-        # Use IMG_PATH here to get the correct path
+            
         pencil_path = os.path.join(IMG_PATH, "penico.png")
         trash_path = os.path.join(IMG_PATH, "trashico.png")
         plus_path = os.path.join(IMG_PATH, "plusico.png")
 
-        # Load the images using the constructed paths
         pencil = CTkImage(light_image=Image.open(pencil_path), size=(16, 16))
         trash = CTkImage(light_image=Image.open(trash_path), size=(16, 16))
         plus = CTkImage(light_image=Image.open(plus_path), size=(16, 16))
@@ -107,6 +105,30 @@ class ProjectList:
         self.frame.destroy()
         self.showProjects()
 
+    def showTaskList(self, project_id):
+        from src.task.task import TaskForm  # Pastikan path impor sesuai
+        from src.task.task import TaskController
+        from src.task.task import Task
+
+        # Hapus tampilan proyek
+        for widget in self.frame.winfo_children():
+            widget.destroy()
+
+        self.button_filter.destroy()
+        self.button_reset_filter.destroy()
+        self.prev_button.destroy()
+        self.next_button.destroy()
+
+        # Membuat objek task baru
+        task = Task()  # Pastikan Task adalah kelas yang valid dan sesuai
+        task.setProjectId(project_id)  # Menambahkan projectId pada task baru
+        task_controller = TaskController()
+
+        # Panggil createTaskForm dengan project_id dan task
+        task_form = TaskForm(master=self.master, controller=task_controller)
+        task_form.createTaskForm(project_id, task)
+        task_form.modal_window.grab_set()  # Menampilkan modal
+
     def showProjectDetails(self, project: Project):
         for widget in self.frame.winfo_children():
             widget.destroy()
@@ -119,15 +141,15 @@ class ProjectList:
         self.frame = CTkFrame(self.master, width=600, height=500, fg_color=self.master.cget("fg_color"))
         self.frame.place(relx=0.5, rely=0.1, anchor=N)
 
-        button_back = CTkButton(self.master, text="<", width=50, command=lambda: (self.frame.destroy(),button_back.destroy(),self.showProjects()), font=("", 20))  # noqa
+        button_back = CTkButton(self.master, text="<", width=50, command=lambda: (self.frame.destroy(),button_back.destroy(),self.showProjects()), font=("", 20))
         button_back.place(relx=0.1, rely=0.1)
 
         title = CTkLabel(self.frame, text=project.name, justify="center", anchor="center", font=("", 25))
-        desc = CTkLabel(self.frame, text=project.description, wraplength=300, justify="center", anchor="center", font=("", 15)) # noqa
-        start = CTkLabel(self.frame, text=f"Start: {project.start_date}", justify="center", anchor="center", font=("", 15)) # noqa
+        desc = CTkLabel(self.frame, text=project.description, wraplength=300, justify="center", anchor="center", font=("", 15))
+        start = CTkLabel(self.frame, text=f"Start: {project.start_date}", justify="center", anchor="center", font=("", 15))
         end = CTkLabel(self.frame, text=f"End: {project.deadline}", justify="center", font=("", 15))
         budget = CTkLabel(self.frame, text=f"Budget: {Utility.format_currency_int(project.budget)}",
-                          justify="center", anchor="center", font=("", 15))
+                        justify="center", anchor="center", font=("", 15))
 
         title.grid(row=0, column=0, columnspan=2, padx=5, pady=5)
         desc.grid(row=1, column=0, columnspan=2, padx=5, pady=5)
@@ -142,15 +164,14 @@ class ProjectList:
             done_text = "Mark as not done"
             color = "green"
         mark_done = CTkButton(self.frame, text=done_text, width=20, fg_color=color,
-                              command=lambda: (project.toggleStatus(),self.form.controller.saveProject(self.controller_project_list,project),                   # noqa
-                                               self.showProjects(), button_back.destroy(),print(project.status)), font=("", 15))  # noqa
+                            command=lambda: (project.toggleStatus(), self.form.controller.saveProject(self.controller_project_list, project),
+                                            self.showProjects(), button_back.destroy(), print(project.status)), font=("", 15))
         mark_done.grid(row=5, column=0, columnspan=2, pady=10)
+
+        # Tombol View Tasks
         view_tasks = CTkButton(self.frame, text="View Tasks", width=20, fg_color="#1F6AA5",
-                              command=lambda: (project.toggleStatus(),self.form.controller.saveProject(self.controller_project_list,project),                   # noqa
-                                               button_back.destroy(),print(project.status)), font=("", 15))  # noqa
+                            command=lambda: self.showTaskList(project.id), font=("", 15))
         view_tasks.grid(row=6, column=0, columnspan=2, pady=10)
-
-
 
     def create(self, project_list: list[Project]):
         project = Project()
