@@ -1,6 +1,11 @@
 class Inspiration:
     def __init__(self):
-        pass  
+        self.inspiration_id = -1
+        self.name = "Dummy name"
+        self.cached_image_path = "img/logo.jpg"
+        self.external_link = ""
+        self.date_updated = "2024-12-14 12:00:00"
+        self.tags = ["Dummy tag 1", "Dummy tag 2", "Dummy tag 3"]
 
     def setInspirationId(self, inspiration_id: int):
         self.inspiration_id = inspiration_id

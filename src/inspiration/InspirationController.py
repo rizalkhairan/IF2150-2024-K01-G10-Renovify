@@ -1,13 +1,23 @@
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+
+import customtkinter as ctk
 from src.database.database import DBConnection
 from src.inspiration.Inspiration import Inspiration
 from src.inspiration.InspirationList import InspirationList
 from src.inspiration.InspirationForm import InspirationForm
 
 class InspirationController:
-    def __init__(self):
-        self.InspirationList = InspirationList()
+    def __init__(self, master: ctk.CTk):
         self.db = DBConnection()
-        self.getAllProjects()
+        self.inspirations = [Inspiration() for _ in range(8)]   # Dummy inspirations
+        self.master = master
+
+    def showAllInspirations(self):
+        self.inspiration_list = InspirationList(master=self.master, controller=self)
+        self.inspiration_list.showInspirations(self.inspirations)   # self.inspirations ganti dengan self.getAllInspirations()
+
 
     def getAllInspirations(self):
         inspirations = []
@@ -23,6 +33,7 @@ class InspirationController:
             inspiration.setTags(tags)
             inspirations.append(inspiration)
         
+        self.inspirations = inspirations
         return inspirations
 
     def getInspiration(self, inspiration_id: int):
@@ -44,7 +55,7 @@ class InspirationController:
         inspiration_id, name, cached_image_path, link, date_updated, tags = inspiration_form.inputInspiration()
         self.db.createInspiration(inspiration_id, name, cached_image_path, link, date_updated, tags)
     
-    def editInspiration(self):
+    def editInspiration(self, inspiration_id: int):
         inspiration_form = InspirationForm()
         inspiration_id, name, cached_image_path, link, date_updated, tags = inspiration_form.inputInspiration()
         self.db.editInspiration(inspiration_id, name, cached_image_path, link, date_updated, tags)
@@ -54,8 +65,8 @@ class InspirationController:
 
 
 if __name__=='__main__':
-    import customtkinter as ctk
-    root = ctk.CTk()
-    inspiration = InspirationList(root)
-    inspiration.showInspiration()
-    root.mainloop()
+    main_frame = ctk.CTk()
+    main_frame.geometry("800x600")
+    controller = InspirationController(main_frame)
+    controller.showAllInspirations()
+    main_frame.mainloop()
