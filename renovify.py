@@ -1,4 +1,5 @@
+from src.main import App
 
-
-def main():
-    pass
+if __name__=='__main__':
+    app = App()
+    app.mainloop()
