@@ -2,6 +2,7 @@ import customtkinter as ctk
 from PIL import Image
 from Inspiration import Inspiration
 from functools import partial
+import webbrowser
 
 class InspirationList:
     def __init__(self, master: ctk.CTk, controller):
@@ -127,6 +128,7 @@ class InspirationPage():
 
             link_label = ctk.CTkLabel(self.master, text=f"{inspiration.getExternalLink()}", width=20, height=5, font=('Arial', 10))
             link_label.grid(row=2, column=i, padx=5, sticky='e')
+            link_label.bind("<Button-1>", lambda e, url=inspiration.getExternalLink(): self.open_link(url))
             self.widgets.append(link_label)
             
             tags = ctk.CTkTextbox(self.master, width=200, height=50, fg_color='transparent', wrap='word')
@@ -151,3 +153,6 @@ class InspirationPage():
             delete_button = ctk.CTkButton(edit_delete_frame, text="Delete", image=delete_icon,width=50, height=30, command=delete_action)
             delete_button.grid(row=0, column=1, padx=5)
             self.widgets.append(delete_button)
+    
+    def open_link(self, url):
+        webbrowser.open_new(url)
