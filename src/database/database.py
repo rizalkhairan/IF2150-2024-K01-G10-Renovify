@@ -171,8 +171,9 @@ class DBConnection:
         cur = self.con.execute("INSERT INTO inspirations (name, cached_image_path, link, date_updated) VALUES (?, ?, ?, ?)",
                                 (name, cached_image_path, link, date_updated))
         self.con.commit()
+        inspiration_id = cur.lastrowid
         cur.close()
-        return
+        return inspiration_id
     
     def editInspiration(self, inspiration_id, name, cached_image_path, link, date_updated):
         cur = self.con.execute("UPDATE inspirations SET name=?, cached_image_path=?, link=?, date_updated=? WHERE inspiration_id=?",
@@ -202,8 +203,8 @@ class DBConnection:
         cur.close()
         return
     
-    def deleteTag(self, inspiration_id, tag):
-        cur = self.con.execute("DELETE FROM tags WHERE inspiration_id=? AND tag=?", (inspiration_id, tag))
+    def deleteAllTag(self, inspiration_id):
+        cur = self.con.execute("DELETE FROM tags WHERE inspiration_id=?", (inspiration_id,))
         self.con.commit()
         cur.close()
         return

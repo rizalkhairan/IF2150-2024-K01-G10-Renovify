@@ -31,7 +31,6 @@ class InspirationForm:
         if (inspiration_id != -1):
             self.name_entry.insert(0, self.controller.getInspiration(inspiration_id).getName())
 
-        print("inspiration_id", inspiration_id)
         self.link_entry_label = ctk.CTkLabel(self.master, text="Link", width=20, height=30)
         self.link_entry_label.grid(row=2, column=0, pady=5)
         self.widgets.append(self.link_entry_label)
@@ -41,7 +40,7 @@ class InspirationForm:
         if (inspiration_id != -1):
             self.link_entry.insert(0, self.controller.getInspiration(inspiration_id).getExternalLink())
 
-        self.tags_label = ctk.CTkLabel(self.master, text="Tags", width=20, height=30)
+        self.tags_label = ctk.CTkLabel(self.master, text="Tags\n(Separate by each line)", width=20, height=30)
         self.tags_label.grid(row=3, column=0, pady=5)
         self.widgets.append(self.tags_label)
         self.tags_textbox = ctk.CTkTextbox(self.master, width=250, height=50)
@@ -68,4 +67,5 @@ class InspirationForm:
         else:
             self.controller.editInspiration(self.inspiration_id, name, cached_image_path, link, date_update, tags)
         self.destroyWidgets()
+        self.controller.inspiration_list.showInspirations(self.controller.getAllInspirations())
         self.master.destroy()
