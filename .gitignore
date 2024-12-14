@@ -2,3 +2,10 @@ venv/
 coba*
 .flake8
 *helper*
+
+
+__pycache__/
+*.py[cod]
+*$py.class
+
+data/

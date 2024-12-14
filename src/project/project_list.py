@@ -26,7 +26,7 @@ class ProjectList:
         self.proj_list = self.controller_project_list
         self.prev_list = self.controller_project_list.copy()
         self.frame = CTkFrame(self.master, width=700, height=500)
-        self.frame.place(x=50, y=100)
+        self.frame.place(x=50, y=50)
         self.updateUI()
         self.watchProjectList()
 
@@ -44,8 +44,10 @@ class ProjectList:
         end_idx = start_idx + self.projects_per_page
         current_projects = self.proj_list[start_idx:end_idx]
 
-        if len(self.proj_list) == 0:
-            no_project_label = CTkLabel(self.frame, text="No Projects to show")
+
+        if (len(self.proj_list) == 0):
+            no_project_label = CTkLabel(self.frame, text="No projects to show", anchor=W,
+                                        fg_color=self.frame.cget("fg_color"), font=("", 20), width=550)
             no_project_label.grid(row=0, column=0, padx=10)
             idx = 0
 
@@ -60,8 +62,10 @@ class ProjectList:
         plus = CTkImage(light_image=Image.open(plus_path), size=(16, 16))
 
         for idx, project in enumerate(current_projects):
-            button_details = CTkButton(self.frame, text=f"{project.name}", anchor="w", command=lambda p=project: self.showProjectDetails(p),
-                                       fg_color=self.frame.cget("fg_color"), font=("", 20), width=500)
+
+            button_details = CTkButton(self.frame, text=f"{project.name}", anchor=W,
+                                       command=lambda p=project: self.showProjectDetails(p),
+                                       fg_color=self.frame.cget("fg_color"), font=("", 20), width=550)
             button_details.grid(row=idx, column=0, sticky="w", padx=(5, 0))
             button_edit = CTkButton(self.frame, text="", image=pencil, width=30, command=lambda p=project: self.edit(self.proj_list, p))
             button_edit.grid(row=idx, column=1)
@@ -70,17 +74,16 @@ class ProjectList:
 
         button_add = CTkButton(self.frame, text="", image=plus, width=68, command=lambda: self.create(self.proj_list))
         button_add.grid(row=idx + 1, column=1, columnspan=2)
+        self.button_filter = CTkButton(self.master, text="Filter", width=75, command=self.filter.open_filter_window) # noqa
+        self.button_filter.place(x=700, y=50)
+        self.button_reset_filter = CTkButton(self.master, text="Reset Filter", width=68, command=self.resetFilter) # noqa
+        self.button_reset_filter.place(x=700, y=80)
 
-        button_filter = CTkButton(self.master, text="Filter", width=75, command=self.filter.open_filter_window)
-        button_filter.grid(column=1, row=0, pady=(60, 0))
-        button_reset_filter = CTkButton(self.master, text="Reset Filter", width=68, command=self.resetFilter)
-        button_reset_filter.grid(column=1, row=1, pady=(5, 0))
+        self.prev_button = CTkButton(self.master, text="Previous", command=self.previousPage, width=80)
+        self.prev_button.place(x=50, y=530)
 
-        prev_button = CTkButton(self.master, text="Previous", command=self.previousPage, width=80)
-        prev_button.place(x=50, y=500)
-
-        next_button = CTkButton(self.master, text="Next", command=self.nextPage, width=80)
-        next_button.place(x=570, y=500)
+        self.next_button = CTkButton(self.master, text="Next", command=self.nextPage, width=80)
+        self.next_button.place(x=595, y=550)
 
     def nextPage(self):
         if self.current_page < self.max_pages - 1:
