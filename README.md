@@ -60,22 +60,10 @@ Renovify is an application implemented in Python that help users to organize hou
 │   └── trashico.png
 ├── src
 │   ├── budget
-│   │   └── __pycache__
-│   │       └── user_data.db
-│   ├── data
-│   │   ├── user
-│   │   │   └── budget.cpython-311.pyc
 │   │   └── budget.py
 │   ├── database
-│   │   ├── __pycache__
-│   │   │   └── database.cpython-313.pyc
 │   │   └── database.py
 │   ├── inspiration
-│   │   ├── __pycache__
-│   │   │   ├── Inspiration.cpython-313.pyc
-│   │   │   ├── InspirationController.cpython-313.pyc
-│   │   │   ├── InspirationForm.cpython-313.pyc
-│   │   │   └── InspirationList.cpython-313.pyc
 │   │   ├── Inspiration.py
 │   │   ├── InspirationController.py
 │   │   ├── InspirationForm.py
@@ -89,13 +77,9 @@ Renovify is an application implemented in Python that help users to organize hou
 │   │   ├── project_list.py
 │   │   └── utility.py
 │   ├── task
-│   │   ├── __pycache__
-│   │   │   └── task.cpython-313.pyc
 │   │   ├── task.py
 │   │   └── tes.py
 │   ├── timeline
-│   │   ├── __pycache__
-│   │   │   └── timeline.cpython-313.pyc
 │   │   └── timeline.py
 │   └── main.py
 ├── .gitignore
