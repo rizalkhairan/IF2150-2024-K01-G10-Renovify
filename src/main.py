@@ -13,6 +13,7 @@ from tkinter import ttk
 from datetime import datetime
 from src.inspiration.InspirationController import InspirationController
 from src.timeline.timeline import DisplayTimeline, TimelineController
+from src.project.project_list import ProjectList
 
 class App(CTk):
     def __init__(self):
@@ -22,7 +23,8 @@ class App(CTk):
 
         base_dir = os.path.dirname(os.path.abspath(__file__)) 
         db_path = os.path.join(base_dir, "../database/your_database_file.db") 
-
+        
+        self.project_view = ProjectList(master=self)
         self.timeline_controller = TimelineController()
         self.timeline_view = DisplayTimeline(self, self.timeline_controller)
         self.inspiration_controller = InspirationController(master=self)
@@ -57,7 +59,8 @@ class App(CTk):
         button.grid(row=0, column=position, sticky="ew")
 
     def open_project(self):
-        print("Opening Project section...")
+        self.inspiration_controller.inspiration_list.destroyWidgets()
+        self.project_view.showProjects()
 
     def open_inspiration(self):
         self.inspiration_controller.showAllInspirations()
