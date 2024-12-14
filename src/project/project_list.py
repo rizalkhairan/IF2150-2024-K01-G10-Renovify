@@ -142,6 +142,12 @@ class ProjectList:
                               command=lambda: (project.toggleStatus(),self.form.controller.saveProject(self.controller_project_list,project),                   # noqa
                                                self.showProjects(), button_back.destroy(),print(project.status)), font=("", 15))  # noqa
         mark_done.grid(row=5, column=0, columnspan=2, pady=10)
+        view_tasks = CTkButton(self.frame, text="View Tasks", width=20, fg_color="#1F6AA5",
+                              command=lambda: (project.toggleStatus(),self.form.controller.saveProject(self.controller_project_list,project),                   # noqa
+                                               button_back.destroy(),print(project.status)), font=("", 15))  # noqa
+        view_tasks.grid(row=6, column=0, columnspan=2, pady=10)
+
+
 
     def create(self, project_list: list[Project]):
         project = Project()
