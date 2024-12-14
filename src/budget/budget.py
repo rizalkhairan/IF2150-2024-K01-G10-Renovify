@@ -114,11 +114,11 @@ class ShowBudget: #BOUNDARY
         return result
     
 class Expense:
-    def __init__(self, expenseId=None, projectId=None, description='', amount=0):
-        self.expenseId = expenseId #expense ID
-        self.projectId = projectId
-        self.description = description
-        self.amount = amount
+    def __init__(self) -> None:
+        self.expenseId: int = None #expense ID
+        self.projectId: int = None
+        self.description: str = ""
+        self.amount: int = None
 
     def getProjectId(self):
         return self.projectId        
@@ -129,11 +129,11 @@ class Expense:
     def getAmount(self):
         return self.amount
 
-    def setExpenseId(self, newExpenseId):
+    def setExpenseId(self, newExpenseId) -> int:
         self.expenseId = newExpenseId
-    def setDescription(self, newDesc):
+    def setDescription(self, newDesc) -> str:
         self.description = newDesc
-    def setAmount(self, newAmount):
+    def setAmount(self, newAmount) -> float:
         self.amount = newAmount
  
 class ExpenseController:
@@ -174,17 +174,18 @@ class ExpenseForm: #BOUNDARY
         # project = cur.fetchone()
         # if not project:
         #     return (f"Validation Error: Project '{project_name}' does not exist.")
-        if not self.entries["description"].get().strip():
-            return "Description name is required."
+        if not self.entries["description"].get("1.0", END).strip():
+            print("Description name is required.")
+            return True
         if not self.entries["amount"].get().replace('.', '').isdigit():
-            return "Amount must be a valid number."
+            print("Amount must be a valid number.")
+            return True
 
         return None
 
-
     def createExpenseForm(self, expense_list: list[Expense], expense: Expense):
         fields = ["Description", "Amount"]
-        header = "Create New Expense" if expense.get("expenseId") is None else "Edit Expense"
+        header = "Create New Expense" if expense.expenseId is None else "Edit Expense"
 
         self.modal_window = CTkToplevel(self.master)
         self.modal_window.grab_set()
@@ -243,9 +244,7 @@ class ExpenseForm: #BOUNDARY
 
         button_frame = CTkFrame(self.modal_window, fg_color=self.modal_window.cget("fg_color"))
         button_frame.grid()
-        button_yes = CTkButton(button_frame, text="Delete", width=40,
-                               command=lambda: (self.controller.deleteExpense(expense_list, expense),
-                                                self.closeExpenseForm()))
+        button_yes = CTkButton(button_frame, text="Delete", width=40,command=lambda: (self.controller.deleteExpense(expense_list, expense), self.closeExpenseForm()))
         button_yes.grid(row=2, column=1, padx=10)
         button_no = CTkButton(button_frame, text="Cancel", width=40, command=self.closeExpenseForm)
         button_no.grid(row=2, column=0, padx=10)
@@ -359,7 +358,7 @@ class ExpenseList: #BOUNDARY
         amount.grid(row=3, column=0, columnspan=2)
 
     def create(self, expense_list: list[Expense]):
-        expense = expense()  
+        expense = Expense()  
         self.form.createExpenseForm(expense_list, expense)
 
     def edit(self, expense_list: list[Expense], expense: Expense):
@@ -524,11 +523,34 @@ class CompareExpenseController:
 #             {"project": "Project A", "budget": 1000, "expenses": 700, "difference": 300},
 #             {"project": "Project B", "budget": 500, "expenses": 600, "difference": -100},
 #         ]
+class Utility:
+    @staticmethod
+    def format_currency(entry: CTkEntry):
+        value = entry.get()
 
+        value = value.replace(".", "").strip()
+
+        if value:
+            try:
+                # Format as currency
+                cursor_position = entry.index(INSERT)
+                formatted_value = f"{int(value):,}".replace(",", ".")
+                num_commas_before_cursor = (cursor_position - 1) // 3
+                num_commas_after_cursor = len(formatted_value
+                                              [:cursor_position + num_commas_before_cursor]) - cursor_position
+                entry.delete(0, END)
+                entry.insert(0, formatted_value)
+                entry.icursor(cursor_position + num_commas_after_cursor)
+            except ValueError:
+                pass
+
+    def format_currency_int(budget: int) -> str:
+        formatted = f"{budget:,}".replace(",", ".")
+        return "Rp" + formatted
 
 if __name__ == "__main__":
-    set_appearance_mode("System")  # Modes: "System" (default), "Dark", "Light"
-    set_default_color_theme("blue")  # Themes: "blue", "green", "dark-blue"
+    # set_appearance_mode("System")  # Modes: "System" (default), "Dark", "Light"
+    # set_default_color_theme("blue")  # Themes: "blue", "green", "dark-blue"
 
     # Uncomment to test each boundary class
     # ShowBudget(controller).displayAllProjectsWithTasksBudget()
@@ -537,14 +559,19 @@ if __name__ == "__main__":
     # DisplayCompareExpense(controller).displayExpenseComparison()
 
     root = CTk()
+    root.title("Budget and Expense Manager")
+    root.geometry("800x600")  
+    style = ttk.Style(root)
+    style.configure("Custom.DateEntry",
+                    background="white",
+                    foreground="black",
+                    fieldbackground="lightblue",
+                    font=("Arial", 12),
+                    arrowcolor="blue")
+    
     controller = ExpenseController()
-
-    expense1 = {"projectId": 1, "expenseId": 1, "description": "aa", "amount": 200}
-    expense2 = {"projectId": 2, "expenseId": 2, "description": "bb", "amount": 300}
-    expense3 = {"projectId": 3, "expenseId": 3, "description": "cc", "amount": 400}
-    expense_list = [expense1, expense2, expense3]
-
-    form = ExpenseForm(root, controller)  
-    form.createExpenseForm(expense_list, expense1)
-
+    form = ExpenseForm(master=root, controller=controller)
+    expense_list = ExpenseList(master=root, form=form)
+    expenses = []  
+    expense_list.showExpenses(expenses)
     root.mainloop()
