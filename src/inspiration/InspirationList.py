@@ -17,7 +17,6 @@ class InspirationList:
             widget.destroy()
 
     def showInspirations(self, inspirations: list[Inspiration]):
-        self.destroyWidgets()
         self.inspirations = inspirations
 
         self.inspiration_frame = ctk.CTkFrame(self.master, width=800, height=500)
@@ -71,20 +70,16 @@ class InspirationList:
 
 
     def create(self):
-        self.controller.createInspiration()
-        self.controller.showAllInspirations()
+        self.controller.createInspirationForm()
 
     def edit(self, inspiration_id: int):
-        self.controller.editInspiration(inspiration_id)
-        self.controller.showAllInspirations()
+        self.controller.editInspirationForm(inspiration_id)
 
     def delete(self, inspiration_id: int):
         confirmed = False
 
         if (confirmed):
-            self.controller.deleteInspiration(inspiration_id)
-        
-        self.controller.showAllInspirations()
+            self.controller.deleteInspiration(inspiration_id)        
 
 class InspirationPage():
     def __init__(self, master: ctk.CTkFrame, inspiration_list: InspirationList):

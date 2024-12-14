@@ -1,6 +1,6 @@
 class Inspiration:
     def __init__(self):
-        self.inspiration_id = -1
+        self.inspiration_id = -2
         self.name = "Dummy name"
         self.cached_image_path = "img/logo.jpg"
         self.external_link = ""

@@ -49,19 +49,23 @@ class InspirationController:
             inspiration.setTags(tags)
         
         return inspiration
-
-    def createInspiration(self):
-        inspiration_form = InspirationForm()
-        inspiration_id, name, cached_image_path, link, date_updated, tags = inspiration_form.inputInspiration()
-        self.db.createInspiration(inspiration_id, name, cached_image_path, link, date_updated, tags)
     
-    def editInspiration(self, inspiration_id: int):
-        inspiration_form = InspirationForm()
-        inspiration_id, name, cached_image_path, link, date_updated, tags = inspiration_form.inputInspiration()
+    def createInspiration(self, name: str, cached_image_path: str, link: str, date_updated: str, tags: list[str]):
+        self.db.createInspiration(name, cached_image_path, link, date_updated, tags)
+
+    def editInspiration(self, inspiration_id: int, name: str, cached_image_path: str, link: str, date_updated: str, tags: list[str]):
         self.db.editInspiration(inspiration_id, name, cached_image_path, link, date_updated, tags)
 
     def deleteInspiration(self, inspiration_id: int):
         self.db.deleteInspiration(inspiration_id)
+
+    def createInspirationForm(self):
+        inspiration_form = InspirationForm(master=self.master, controller=self)
+        inspiration_form.showInspirationForm(-1)
+    
+    def editInspirationForm(self, inspiration_id: int):
+        inspiration_form = InspirationForm(master=self.master, controller=self)
+        inspiration_form.showInspirationForm(inspiration_id)
 
 
 if __name__=='__main__':
