@@ -3,8 +3,49 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 from customtkinter import *
 from tkinter import messagebox, ttk
-import src.database.database as db
+import src.database.database as database
 from PIL import Image
+class BudgetController:
+    def __init__(self, db_path):
+        self.db_path = db_path
+
+    def getAllProjectsBudget(self):
+        with database.DBConnection() as db:
+            projects = db.getAllProjects()
+            project_budget = []
+            for project in projects:
+                project_budget.append({
+                    "project": project["project"],
+                    "budget": project["budget"]
+                })
+            return project_budget
+
+    def getProjectBudget(self, project_name):
+        for project in self.projects:
+            if project["project"] == project_name:
+                return {
+                    "project": project["project"],
+                    "budget": project["budget"]
+                }
+        # Jika proyek tidak ditemukan
+        return None
+    
+    def getProjectsTasksBudget(self):
+        with database.DBConnection() as db:
+            project_task_budget = []
+            projects = db.getAllProjects()
+            for project in projects:
+                tasks = db.getAllTasksOfProject()
+                for task in tasks:
+                    project_name = project[1]
+                    task_name = task[2]
+                    task_budget = task[7]
+                    project_task_budget.append({
+                        "project": project_name,
+                        "task": task_name,
+                        "task_budget": task_budget
+                    })
+            return project_task_budget
 
 # atribut : 
 # expenseId : integer
@@ -12,7 +53,10 @@ from PIL import Image
 # description :  String
 # amount : float
 class ShowBudget: #BOUNDARY
-    def __init__(self, controller):
+    # def __init__(self, controller):
+    #     self.controller = controller
+    def __init__(self, master: CTk, controller: BudgetController):
+        self.master = master
         self.controller = controller
 
     def displayAllProjectsBudget(self):
@@ -26,17 +70,20 @@ class ShowBudget: #BOUNDARY
 
         # Scrollable Table Frame
         table_frame = CTkScrollableFrame(root)
-        table_frame.pack(fill="both", expand=True, padx=15, pady=15)
+        table_frame.pack(fill="both", expand=True, padx=20, pady=15)
 
         # Header Row
         header_frame = CTkFrame(table_frame)
-        header_frame.pack(fill="x", pady=5)
+        header_frame.pack(fill="x", pady=5, padx=20)
         headers = ["Project Name", "Budget"]
         for i, header in enumerate(headers):
             CTkLabel(header_frame, text=header, font=("Arial", 16, "bold"), width=20, anchor="center").grid(row=0, column=i, padx=5, pady=5)
 
         # Data Rows
         projects_budget = self.controller.getAllProjectsBudget()
+        # if (len(projects_budget) == 0):
+        #     CTkLabel(table_frame, text="You don't have any project yet..", font=("Arial", 14), anchor="center").grid(row=0, column=0, padx=5, pady=5, sticky="w")
+        # else:
         for row_index, project_data in enumerate(projects_budget, start=1):
             CTkLabel(table_frame, text=project_data['project'], font=("Arial", 14), anchor="w").grid(row=row_index, column=0, padx=5, pady=5, sticky="w")
             CTkLabel(table_frame, text=f"{project_data['budget']}", font=("Arial", 14), anchor="center").grid(row=row_index, column=1, padx=5, pady=5, sticky="w")
@@ -63,7 +110,6 @@ class ShowBudget: #BOUNDARY
 
         # Run Main Loop
         root.mainloop()
-
 
     def displayAllProjectsWithTasksBudget(self):
         # Root Window Setup
@@ -95,23 +141,6 @@ class ShowBudget: #BOUNDARY
         # Run Main Loop
         root.mainloop()
 
-    def getProjectTasksBudget(self):
-        result = []
-        
-        # Iterasi setiap proyek
-        for project in self.projects:
-            project_name = project["project"]
-            tasks = project["tasks"]
-
-            # Iterasi setiap task dalam proyek
-            for task in tasks:
-                result.append({
-                    "project": project_name,
-                    "task": task["task"],
-                    "task_budget": task["budget"]
-                })
-
-        return result
     
 class Expense:
     def __init__(self) -> None:
@@ -138,7 +167,9 @@ class Expense:
  
 class ExpenseController:
     def __init__(self):
-        self.db = db.DBConnection()
+        self.db = database.DBConnection()
+        # self.Expense = [Expense() for _ in range(8)]   # Dummy inspirations
+        # self.master = master
 
     def saveExpense(self, Expense_list: list[Expense], Expense: Expense):
         expense_id = Expense.getExpenseId()
@@ -227,6 +258,7 @@ class ExpenseForm: #BOUNDARY
             return
         
         # expense.setExpenseId(self.entries["expense_id"].get())
+
         expense.setDescription(self.entries["description"].get("1.0", END).strip())
         amount_str = self.entries["amount"].get().replace('.', '').strip()
         expense.setAmount(int(amount_str))
@@ -407,54 +439,6 @@ class ExpenseList: #BOUNDARY
     #     print(f"Expense ID {expense_id} has been deleted.")
 
 
-class DisplayCompareExpense:
-    def __init__(self, controller):
-        self.controller = controller
-
-    def displayExpenseComparison(self):
-        # Root Window Setup
-        root = CTk()
-        root.title("Expense Comparison")
-        root.geometry("800x500")
-
-        # Title Label
-        CTkLabel(root, text="Expense vs Budget Comparison", font=("Arial", 24, "bold")).pack(pady=15)
-
-        # Scrollable Table Frame
-        table_frame = CTkScrollableFrame(root)
-        table_frame.pack(fill="both", expand=True, padx=15, pady=15)
-
-        # Header Row
-        header_frame = CTkFrame(table_frame)
-        header_frame.pack(fill="x", pady=5)
-        headers = ["Project", "Budget", "Expense", "Difference"]
-        for i, header in enumerate(headers):
-            CTkLabel(header_frame, text=header, font=("Arial", 16, "bold"), width=20, anchor="center").grid(row=0, column=i, padx=5, pady=5)
-
-        # Data Rows
-        comparison_data = self.controller.calculateComparison()
-        for row_index, project_data in enumerate(comparison_data, start=1):
-            project = project_data['project']
-            budget = project_data['budget']
-            expenses = project_data['expenses']
-            difference = project_data['difference']
-
-            # Determine Difference Display and Color
-            if difference >= 0:
-                diff_text = f"+{difference}"  # Add positive sign
-                diff_color = "green"
-            else:
-                diff_text = f"{difference}"  # Negative values already have "-"
-                diff_color = "red"
-
-            # Display data in columns
-            CTkLabel(table_frame, text=project, font=("Arial", 14), anchor="w").grid(row=row_index, column=0, padx=5, pady=5, sticky="w")
-            CTkLabel(table_frame, text=f"{budget}", font=("Arial", 14), anchor="center").grid(row=row_index, column=1, padx=5, pady=5, sticky="w")
-            CTkLabel(table_frame, text=f"{expenses}", font=("Arial", 14), anchor="center").grid(row=row_index, column=2, padx=5, pady=5, sticky="w")
-            CTkLabel(table_frame, text=diff_text, font=("Arial", 14), fg_color=None, text_color=diff_color, anchor="center").grid(row=row_index, column=3, padx=5, pady=5, sticky="w")
-
-        # Run Main Loop
-        root.mainloop()
 class CompareExpenseController:
 # Q-20-1
 # SELECT Expense FROM Project WHERE id = <id>
@@ -466,27 +450,26 @@ class CompareExpenseController:
 # SELECT (Budget - Expense) AS Difference FROM Project WHERE id = <specific_project_id>;
 # Menghitung perbedaan Expense dan Budget
     def __init__(self):
-        self.db = db.DBConnection()
+        self.db = database.DBConnection()
 
     def calculateComparison(self):
         # Ambil semua proyek dari database
-        cur = self.db.execute("SELECT project_id, name, budget FROM projects")
-        projects = cur.fetchall()
-        cur.close()
+        # cur = self.db.execute("SELECT project_id, name, budget FROM projects")
+        # cur.close()
 
+        projects = self.db.getAllProjects()
         comparison_data = []
 
         for project in projects:
-            project_id = project[0]
-            project_name = project[1]
-            budget = project[2]
+            project_id = project["project_id"]
+            project_name = project["name"]
+            budget = project["budget"]
 
             # Hitung total pengeluaran untuk proyek ini
-            cur = self.db.execute("SELECT SUM(amount) FROM expenses WHERE project_id = ?", (project_id,))
-            expense = cur.fetchone()[0]
-            cur.close()
-
-            expense = expense if expense else 0  # Jika tidak ada pengeluaran, setel ke 0
+            sum = 0
+            expenses = self.db.getAllExpensesOfProject(project_id)
+            for expense in expenses:
+                sum += expense
             difference = budget - expense
 
             # Tambahkan hasil ke data perbandingan
@@ -494,35 +477,119 @@ class CompareExpenseController:
                 "project_name": project_name,
                 "budget": budget,
                 "expense": expense,
-                "difference": difference
+                "difference": difference,
+                "list_expense": expenses
             })
 
         return comparison_data
 
-# class ExampleController:
-#     def getAllProjectsWithTasksBudget(self):
-#         return {
-#             "Project A": {"Task 1": 500, "Task 2": 300},
-#             "Project B": {"Task 3": 700, "Task 4": 200},
-#         }
+class DisplayCompareExpense:
+    def __init__(self, master: CTk, controller: CompareExpenseController, form: ExpenseForm):
+        self.master = master
+        self.controller = controller
+        self.form = form
 
-#     def validateInput(self, project_name, description, amount):
-#         return bool(project_name and description and amount.isdigit())
+    # def showExpenses(self, p_list: list[Expense]):
+    #     self.expense_list = p_list
+    #     self.prev_list = p_list.copy()
+    #     self.frame = CTkFrame(self.master)
+    #     self.frame.place(relx=0.5, rely=0.1, anchor=N)
+    #     self.updateUI()
+    #     self.watchExpenseList()
 
-#     def createExpense(self, project_name, description, amount):
-#         print(f"Expense created for {project_name}: {description} - {amount}")
+    # def watchExpenseList(self):
+    #     if self.expense_list != self.prev_list:
+    #         self.prev_list = self.expense_list.copy()
+    #         self.updateUI()
+    #     self.master.after(500, self.watchExpenseList)
 
-#     def getAllExpenses(self):
-#         return [
-#             {"description": "Purchase Materials", "amount": 100},
-#             {"description": "Worker Payment", "amount": 200},
-#         ]
+    def displayExpenseComparison(self):
+        # Root Window Setup
+        root = CTk()
+        root.title("Expense Comparison")
+        root.geometry("800x500")
 
-#     def calculateComparison(self):
-#         return [
-#             {"project": "Project A", "budget": 1000, "expenses": 700, "difference": 300},
-#             {"project": "Project B", "budget": 500, "expenses": 600, "difference": -100},
-#         ]
+        # Title Label
+        CTkLabel(root, text="Expense and Budget Comparison", font=("Arial", 24, "bold")).pack(pady=15)
+
+        # Scrollable Table Frame
+        table_frame = CTkScrollableFrame(root)
+        table_frame.pack(fill="both", expand=True, padx=15, pady=15)
+
+        # Header Row
+        header_frame = CTkFrame(table_frame)
+        header_frame.pack(fill="x", pady=5, padx=5)
+        headers = ["Project", "Budget", "Expense", "Difference", "", ""]
+        for i, header in enumerate(headers):
+            CTkLabel(header_frame, text=header, font=("Arial", 16, "bold"), width=20, anchor="center").grid(row=0, column=i, padx=35, pady=5)
+
+        # Data Rows
+        comparison_data = self.controller.calculateComparison()
+        self.frame = CTkFrame(self.master)
+        self.frame.place(relx=0.5, rely=0.1, anchor=N)
+
+        # for widget in self.frame.winfo_children():
+        #     widget.destroy()
+
+        # if len(self.expense_list) == 0:
+        #     no_expense_label = CTkLabel(self.frame, text="No Expense to show")
+        #     no_expense_label.grid(row=0, column=0, padx=10, pady=10)
+        #     idx = 0
+
+        # try:
+        # plus = CTkImage(light_image=Image.open("../../img/plusico.png"), size=(16, 16))
+        # except Exception as e:
+        #     print(f"Error loading images: {e}")
+        #     pencil, trash, plus = None, None, None
+        for row_index, project_data in enumerate(comparison_data, start=1):
+            project = project_data["project_name"]
+            budget = project_data["budget"]
+            expense = project_data["expense"]
+            difference = project_data["difference"]
+            expense_list = project_data["list_expense"]
+
+            # Determine Difference Display and Color
+            if difference >= 0:
+                diff_text = f"+{difference}"  # Add positive sign
+                diff_color = "green"
+            else:
+                diff_text = f"-{difference}"  # Negative values already have "-"
+                diff_color = "red"
+
+            # Display data in columns
+            CTkLabel(table_frame, text=project, font=("Arial", 14), anchor="w").grid(row=row_index, column=0, padx=25, pady=5, sticky="w")
+            CTkLabel(table_frame, text=f"{budget}", font=("Arial", 14), anchor="center").grid(row=row_index, column=1, padx=25, pady=5, sticky="w")
+            CTkLabel(table_frame, text=f"{expense}", font=("Arial", 14), anchor="center").grid(row=row_index, column=2, padx=25, pady=5, sticky="w")
+            CTkLabel(table_frame, text=diff_text, font=("Arial", 14), fg_color=None, text_color=diff_color, anchor="center").grid(row=row_index, column=3, padx=25, pady=5, sticky="w")
+            CTkButton(
+                table_frame,
+                text="edit",
+                image=CTkImage(light_image=Image.open("../../img/penico.png"), size=(16, 16)),
+                width=5,
+                command=lambda t=expense: self.edit(expense_list, t)
+            ).grid(row=0, column=4, padx=5, pady=5)
+
+            CTkButton(
+                table_frame,
+                text="delete",
+                image=CTkImage(light_image=Image.open("../../img/trashico.png"), size=(16, 16)),
+                width=5,
+                command=lambda t=expense: self.delete(expense_list, t)
+            ).grid(row=0, column=5, padx=5, pady=5)
+
+        root.mainloop()
+
+    def create(self, expense_list: list[Expense]):
+        expense = Expense()  
+        self.form.createExpenseForm(expense_list, expense)
+
+    def edit(self, expense_list: list[Expense], expense: Expense):
+        self.form.createExpenseForm(expense_list, expense)
+        self.waitForModalToClose()
+
+    def delete(self, expense_list: list[Expense], expense: Expense):
+        self.form.deleteExpenseForm(expense_list, expense)
+
 class Utility:
     @staticmethod
     def format_currency(entry: CTkEntry):
