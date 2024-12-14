@@ -5,6 +5,7 @@ from src.project.project import Project
 from src.project.project_filter import ProjectFilterUI
 from PIL import Image
 
+IMG_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'img'))
 
 class ProjectList:
     def __init__(self, master: CTk):
@@ -43,29 +44,36 @@ class ProjectList:
         end_idx = start_idx + self.projects_per_page
         current_projects = self.proj_list[start_idx:end_idx]
 
+
         if (len(self.proj_list) == 0):
             no_project_label = CTkLabel(self.frame, text="No projects to show", anchor=W,
                                         fg_color=self.frame.cget("fg_color"), font=("", 20), width=550)
             no_project_label.grid(row=0, column=0, padx=10)
             idx = 0
 
-        pencil = CTkImage(light_image=Image.open("img/penico.png"), size=(16, 16))
-        trash = CTkImage(light_image=Image.open("img/trashico.png"), size=(16, 16))
-        plus = CTkImage(light_image=Image.open("img/plusico.png"), size=(16, 16))
+        # Use IMG_PATH here to get the correct path
+        pencil_path = os.path.join(IMG_PATH, "penico.png")
+        trash_path = os.path.join(IMG_PATH, "trashico.png")
+        plus_path = os.path.join(IMG_PATH, "plusico.png")
+
+        # Load the images using the constructed paths
+        pencil = CTkImage(light_image=Image.open(pencil_path), size=(16, 16))
+        trash = CTkImage(light_image=Image.open(trash_path), size=(16, 16))
+        plus = CTkImage(light_image=Image.open(plus_path), size=(16, 16))
 
         for idx, project in enumerate(current_projects):
+
             button_details = CTkButton(self.frame, text=f"{project.name}", anchor=W,
                                        command=lambda p=project: self.showProjectDetails(p),
                                        fg_color=self.frame.cget("fg_color"), font=("", 20), width=550)
             button_details.grid(row=idx, column=0, sticky="w", padx=(5, 0))
-            button_edit = CTkButton(self.frame, text="", image=pencil, width=30, command=lambda p=project: self.edit(self.proj_list, p))  # noqa
+            button_edit = CTkButton(self.frame, text="", image=pencil, width=30, command=lambda p=project: self.edit(self.proj_list, p))
             button_edit.grid(row=idx, column=1)
-            delete_button = CTkButton(self.frame, text="", image=trash, width=30, command=lambda p=project: self.delete(self.proj_list, p))  # noqa
+            delete_button = CTkButton(self.frame, text="", image=trash, width=30, command=lambda p=project: self.delete(self.proj_list, p))
             delete_button.grid(row=idx, column=2)
 
         button_add = CTkButton(self.frame, text="", image=plus, width=68, command=lambda: self.create(self.proj_list))
         button_add.grid(row=idx + 1, column=1, columnspan=2)
-
         self.button_filter = CTkButton(self.master, text="Filter", width=75, command=self.filter.open_filter_window) # noqa
         self.button_filter.place(x=700, y=50)
         self.button_reset_filter = CTkButton(self.master, text="Reset Filter", width=68, command=self.resetFilter) # noqa
