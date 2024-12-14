@@ -1,5 +1,7 @@
 import customtkinter as ctk
 from PIL import Image
+from functools import partial
+import webbrowser
 from .Inspiration import Inspiration
 
 class InspirationList:
@@ -36,7 +38,7 @@ class InspirationList:
         self.inspiration_page.grid_columnconfigure(0, weight=1)
         self.widgets.append(self.inspiration_page)
         self.page = InspirationPage(self.inspiration_page, self)
-        self.page_count = (len(inspirations)+1) // self.pagination
+        self.page_count = 1+((len(inspirations)-1)//self.pagination)
         self.current_page = 0
         self.page.showPage(inspirations, self.current_page)
 
@@ -76,10 +78,25 @@ class InspirationList:
         self.controller.editInspirationForm(inspiration_id)
 
     def delete(self, inspiration_id: int):
-        confirmed = False
+        self.confirmation_window = ctk.CTkToplevel()
+        self.confirmation_window.attributes("-topmost", True)
+        self.confirmation_window.title("Are you sure?")
+        self.confirmation_window.grid_columnconfigure(0, weight=1)
+        self.confirmation_window.geometry("250x50")
 
-        if (confirmed):
-            self.controller.deleteInspiration(inspiration_id)        
+        button_frame = ctk.CTkFrame(self.confirmation_window, fg_color='transparent')
+        button_frame.grid(row=0, column=0)
+
+        self.confirm_button = ctk.CTkButton(button_frame, text="Yes", width=10, height=30, command=lambda: self.confirm_delete(inspiration_id))
+        self.confirm_button.grid(row=0, column=0, sticky='ew', pady=10, padx=20)
+        self.cancel_button = ctk.CTkButton(button_frame, text="No", width=10, height=30, command=self.cancel_delete)
+        self.cancel_button.grid(row=0, column=1, sticky='ew', pady=10, padx=20)
+
+    def confirm_delete(self, inspiration_id: int):
+        self.controller.deleteInspiration(inspiration_id)
+        self.confirmation_window.destroy()
+    def cancel_delete(self):
+        self.confirmation_window.destroy()
 
 class InspirationPage():
     def __init__(self, master: ctk.CTkFrame, inspiration_list: InspirationList):
@@ -108,20 +125,38 @@ class InspirationPage():
             image = ctk.CTkLabel(self.master, image=image, text='')
             image.grid(row=1, column=i, padx=5)
             self.widgets.append(image)
+
+            date_label = ctk.CTkLabel(self.master, text=f"{inspiration.getDateUpdated()}", width=20, height=5, font=('Arial', 10))
+            date_label.grid(row=2, column=i, padx=5, sticky='w')
+            self.widgets.append(date_label)
+
+            link_label = ctk.CTkLabel(self.master, text=f"{inspiration.getExternalLink()}", width=20, height=5, font=('Arial', 10))
+            link_label.grid(row=2, column=i, padx=5, sticky='e')
+            link_label.bind("<Button-1>", lambda e, url=inspiration.getExternalLink(): self.open_link(url))
+            self.widgets.append(link_label)
             
             tags = ctk.CTkTextbox(self.master, width=200, height=50, fg_color='transparent', wrap='word')
-            tags.insert("0.0", f"{', '.join(inspiration.getTags())}")
+            tags.insert("0.0", f"Tags: {', '.join(inspiration.getTags())}")
             # tags._textbox.tag_configure("text", justify='center')
             tags.configure(state='disabled')
-            tags.grid(row=2, column=i, padx=5)
+            tags.grid(row=3, column=i, padx=5)
             self.widgets.append(tags)    
 
             edit_delete_frame = ctk.CTkFrame(self.master, width=250, height=50, fg_color="transparent")
-            edit_delete_frame.grid(row=3, column=i, padx=5)
+            edit_delete_frame.grid(row=4, column=i, padx=5)
             self.widgets.append(edit_delete_frame)
-            edit_button = ctk.CTkButton(edit_delete_frame, text="Edit", width=50, height=30, command=lambda: self.inspiration_list.edit(inspiration.getInspirationId()))
+            edit_action = partial(self.inspiration_list.edit, inspiration.getInspirationId())
+            edit_icon = Image.open('img/penico.png')
+            edit_icon = ctk.CTkImage(light_image=edit_icon, size=(20, 20))
+            edit_button = ctk.CTkButton(edit_delete_frame, text="Edit", image=edit_icon, width=50, height=30, command=edit_action)
             edit_button.grid(row=0, column=0, padx=5)
             self.widgets.append(edit_button)
-            delete_button = ctk.CTkButton(edit_delete_frame, text="Del", width=50, height=30, command=lambda: self.inspiration_list.delete(inspiration.getInspirationId()))
+            delete_action = partial(self.inspiration_list.delete, inspiration.getInspirationId())
+            delete_icon = Image.open('img/trashico.png')
+            delete_icon = ctk.CTkImage(light_image=delete_icon, size=(20, 20))
+            delete_button = ctk.CTkButton(edit_delete_frame, text="Delete", image=delete_icon,width=50, height=30, command=delete_action)
             delete_button.grid(row=0, column=1, padx=5)
             self.widgets.append(delete_button)
+    
+    def open_link(self, url):
+        webbrowser.open_new(url)
