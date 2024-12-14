@@ -51,6 +51,14 @@ Renovify is an application implemented in Python that help users to organize hou
 │   ├── inspiration_menu.png
 │   ├── inspiration_menu_empty.png
 │   ├── inspiration_menu_pages.png
+│   ├── project_details_page.png
+│   ├── project_filter_page.png
+│   ├── project_form.png
+│   ├── project_menu.png
+│   ├── project_menu_empty.png
+│   ├── task.png
+│   ├── timeline_date_detail.png
+│   ├── timeline_display.png
 │   └── welcome_screen.png
 ├── img
 │   ├── logo.jpg
@@ -69,7 +77,7 @@ Renovify is an application implemented in Python that help users to organize hou
 │   │   ├── InspirationForm.py
 │   │   └── InspirationList.py
 │   ├── project
-│   │   ├── home.py
+│   │   ├── main.py
 │   │   ├── project.py
 │   │   ├── project_controller.py
 │   │   ├── project_filter.py
