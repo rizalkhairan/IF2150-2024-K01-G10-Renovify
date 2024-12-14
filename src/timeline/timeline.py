@@ -1,6 +1,11 @@
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+
 import customtkinter as ctk
 from tkcalendar import Calendar
 from datetime import datetime
+from src.database.database import DBConnection
 
 
 class DisplayTimeline:
@@ -166,16 +171,15 @@ class DisplayTimeline:
 
 
 class TimelineController:
-    def __init__(self, db_path):
-        self.db_path = db_path
+    def __init__(self):
+        self.db = DBConnection() 
 
     def getAllProjectDates(self):
-        with DBConnection(self.db_path) as db:
-            projects = db.getAllProjects()
-            project_dates = []
-            for project in projects:
-                name = project[1]
-                start_date = project[4]
-                end_date = project[5]
-                project_dates.append((name, start_date, end_date))
-            return project_dates
+        projects = self.db.getAllProjects()
+        project_dates = []
+        for project in projects:
+            name = project[1]
+            start_date = project[4]
+            end_date = project[5]
+            project_dates.append((name, start_date, end_date))
+        return project_dates
