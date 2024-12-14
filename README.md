@@ -1,7 +1,7 @@
 # IF2150-2024-K01-G10-Renovify
 <br />
 <div align="center">
-    <img src="./img/logo.jpg" style="width: 800px">
+    <img src="./img/renovify.png" style="width: 800px">
 </div>
 
 <h3 align="center">Renovify</h3>
@@ -46,7 +46,7 @@ Renovify is an application implemented in Python that help users to organize hou
 ### Project Structure
 ```ssh
 .
-├── docs
+├── doc
 │   ├── inspiration_edit.png
 │   ├── inspiration_menu.png
 │   ├── inspiration_menu_empty.png
