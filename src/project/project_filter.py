@@ -13,7 +13,7 @@ class ProjectFilter:
         params = []
 
         # Add dynamic filters based on the table columns
-        if 'status' in filters and filters['status']:
+        if 'status' in filters and filters['status'] is not None:
             query += " AND status = ?"
             params.append(filters['status'])
 

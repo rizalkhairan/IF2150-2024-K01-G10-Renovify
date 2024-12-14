@@ -1,5 +1,6 @@
 from customtkinter import *
 from PIL import Image
+from datetime import datetime
 
 
 class Utility:
@@ -59,3 +60,11 @@ class Utility:
         frame_width = int(root.winfo_width() * 0.8)
         frame_height = int(root.winfo_height() * 0.8)
         frame.configure(width=frame_width, height=frame_height)
+
+    @staticmethod
+    def is_valid_date(date_str):
+        try:
+            datetime.strptime(date_str, "%d-%m-%Y")
+            return True
+        except ValueError:
+            return False

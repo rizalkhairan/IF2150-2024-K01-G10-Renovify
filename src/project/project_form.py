@@ -14,7 +14,6 @@ class ProjectForm():
         fields = ["Name", "Description", "Start Date", "End Date", "Budget"]
         if (not project.id):  # Jika proyek belum ada
             header = "Create new Project"
-            project.status = False
         else:
             header = "Edit Project"
 
@@ -90,7 +89,12 @@ class ProjectForm():
             return "Project name is required."
         if not self.entries["budget"].get().replace('.', '').isdigit():
             return "Budget must be a number."
-        
+        start_date = self.entries["start_date"].get().strip()
+        if start_date and not Utility.is_valid_date(start_date):
+            return "Start date must be in DD-MM-YYYY format."
+        end_date = self.entries["end_date"].get().strip()
+        if end_date and not Utility.is_valid_date(end_date):
+            return "End date must be in DD-MM-YYYY format."
         return None  # No errors
 
     def closeProjectForm(self):

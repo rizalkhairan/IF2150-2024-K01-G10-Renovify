@@ -16,13 +16,12 @@ class ProjectController:
         budget = project.getBudget()
 
         if (project not in project_list):  # Create new
-
             # Cari id tertinggi dan tambah 1
             if (len(project_list) == 0):
                 project.id = 1
             else:
                 project.id = max(project_list, key=lambda
-                                 project: project.id).id, + 1
+                                 project: project.id).id + 1
             index = len(project_list)
             project_list.append(project)
 
@@ -42,7 +41,7 @@ class ProjectController:
             project.id = row[0]
             project.name = row[1]
             project.description = row[2]
-            project.status = row[3]
+            project.status = int(row[3])
             project.start_date = row[4]
             project.deadline = row[5]
             project.budget = row[6]

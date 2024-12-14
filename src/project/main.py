@@ -25,7 +25,7 @@ def move_focus(event):
 
 
 root = CTk()
-root.geometry("700x550")
+root.geometry("800x600")
 default_font = CTkFont(family="Helvetica", size=50)
 
 # def main():

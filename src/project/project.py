@@ -3,7 +3,7 @@ class Project:
         self.id: int = None
         self.name: str = ""
         self.description: str = ""
-        self.status: bool = False       # done atau belum (true done false blum)
+        self.status: bool = 0       # done atau belum (true done false blum)
         self.start_date: str = ""
         self.deadline: str = ""
         self.budget: int = 0
@@ -42,7 +42,10 @@ class Project:
         self.description = newDesc
 
     def toggleStatus(self):
-        self.status = not self.status
+        if (self.status == '0' or self.status == 0):
+            self.status = 1
+        elif (self.status == '1' or self.status == 1):
+            self.status = 0
 
     def setStartDate(self, start):
         self.start_date = start
