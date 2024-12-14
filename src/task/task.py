@@ -12,6 +12,15 @@ from datetime import datetime
 
 IMG_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'img'))
 
+# def get_combobox_style(task):
+#     if task.status == 0:  # "Not Started"
+#         return 'white'
+#     elif task.status == 1:  # "In Progress"
+#         return 'yellow'
+#     elif task.status == 2:  # "Completed"
+#         return 'green'
+#     return 'white'
+
 class Task:
     def __init__(self, taskId=None, projectId=None, name='', status=False, start_date=None, completion_date=None, description='', budget=0):
         self.taskId = taskId
@@ -56,8 +65,14 @@ class Task:
     def setDescription(self, newDesc):
         self.description = newDesc
 
-    def toggleStatus(self):
-        self.status = not self.status
+    def setStatus(self, new_status):
+        self.status = new_status
+
+    def toggleStatus(self, new_status=None):
+        if new_status is not None:
+            self.status = new_status
+        else:
+            self.status = (self.status + 1) % 3 
 
     def setStartDate(self, start):
         self.start_date = start
@@ -83,7 +98,7 @@ class TaskController:
 
         if task not in task_list:
             if len(task_list) == 0:
-                task.taskId = 1  # Ubah dari __taskId
+                task.taskId = 1 
             else:
                 task.taskId = max(task_list, key=lambda task: task.taskId).taskId + 1
             task_list.append(task)
@@ -108,8 +123,8 @@ class TaskForm():
         start_date_str = self.entries["start_date"].get().strip()
         end_date_str = self.entries["end_date"].get().strip()
 
-        print(f"Start Date: {start_date_str}")
-        print(f"End Date: {end_date_str}")
+        # print(f"Start Date: {start_date_str}")
+        # print(f"End Date: {end_date_str}")
 
         if not start_date_str:
             return "Start date is required."
@@ -123,8 +138,8 @@ class TaskForm():
             if end_date < start_date:
                 return "End date cannot be earlier than start date."
             
-            print(f"Start Date (datetime): {start_date}")
-            print(f"End Date (datetime): {end_date}")
+            # print(f"Start Date (datetime): {start_date}")
+            # print(f"End Date (datetime): {end_date}")
 
         except ValueError:
             return "Invalid date format. Please use YYYY-MM-DD."
@@ -135,7 +150,6 @@ class TaskForm():
             return "Budget must be a valid number."
 
         return None
-
 
     def createTaskForm(self, task_list: list[Task], task: Task):
         fields = ["Name", "Description", "Start Date", "End Date", "Budget"]
@@ -157,15 +171,15 @@ class TaskForm():
 
             if field in ["Start Date", "End Date"]:
                 entry = DateEntry(form_frame,
-                                date_pattern="yyyy-mm-dd",
-                                background="white",
-                                disabledbackground="grey",
-                                bordercolor="grey",
-                                headersbackground="lightblue",
-                                headersforeground="black",
-                                weekendbackground="lightgray",
-                                weekendforeground="red",
-                                font=("Arial", 12))
+                                  date_pattern="yyyy-mm-dd",
+                                  background="white",
+                                  disabledbackground="grey",
+                                  bordercolor="grey",
+                                  headersbackground="lightblue",
+                                  headersforeground="black",
+                                  weekendbackground="lightgray",
+                                  weekendforeground="red",
+                                  font=("Arial", 12))
                 entry.grid(row=i + 2, column=1, padx=10, pady=5)
             else:
                 if field == "Description":
@@ -253,30 +267,82 @@ class TaskList:
         self.master.after(500, self.watchTaskList)
 
     def updateUI(self):
+        # Clear existing widgets
         for widget in self.frame.winfo_children():
             widget.destroy()
 
-        if (len(self.task_list) == 0):
+        if len(self.task_list) == 0:
             no_task_label = CTkLabel(self.frame, text="No Task to show")
-            no_task_label.grid(row=0, column=0, padx=10)
+            no_task_label.grid(row=0, column=0, padx=10, pady=10)
             idx = 0
 
-        pencil = CTkImage(light_image=Image.open("../../img/penico.png"), size=(16, 16))
-        trash = CTkImage(light_image=Image.open("../../img/trashico.png"), size=(16, 16))
-        plus = CTkImage(light_image=Image.open("../../img/plusico.png"), size=(16, 16))
+        try:
+            pencil = CTkImage(light_image=Image.open("../../img/penico.png"), size=(16, 16))
+            trash = CTkImage(light_image=Image.open("../../img/trashico.png"), size=(16, 16))
+            plus = CTkImage(light_image=Image.open("../../img/plusico.png"), size=(16, 16))
+        except Exception as e:
+            print(f"Error loading images: {e}")
+            pencil, trash, plus = None, None, None
 
+        # Menampilkan daftar tugas dengan dropdown status
         for idx, task in enumerate(self.task_list):
-            button_details = CTkButton(self.frame, text=f"{task.name}", anchor=W,
-                                       command=lambda: self.showTaskDetails(task),
-                                       fg_color=self.frame.cget("fg_color"))
-            button_details.grid(row=idx, column=0)
-            button_edit = CTkButton(self.frame, text="", image=pencil, width=5, command=lambda: self.edit(self.task_list, task)) # noqa
-            button_edit.grid(row=idx, column=1)
-            delete_button = CTkButton(self.frame, text="", image=trash, width=5, command=lambda: self.delete(self.task_list, task)) # noqa
-            delete_button.grid(row=idx, column=2)
+            task_frame = CTkFrame(self.frame)
+            task_frame.grid(row=idx, column=0, padx=10, pady=10, sticky="w")
 
-        button_add = CTkButton(self.frame, text="", image=plus, width=68, command=lambda: self.create(self.task_list))
-        button_add.grid(row=idx + 1, column=1, columnspan=2)
+            button_details = CTkButton(
+                task_frame,
+                text=f"{task.name}",
+                anchor=W,
+                command=lambda t=task: self.showTaskDetails(t),
+                fg_color=self.frame.cget("fg_color")
+            )
+            button_details.grid(row=0, column=0, sticky="w", padx=10, pady=5)
+
+            # Dropdown untuk memilih status tugas
+            status_choices = ["Not Started", "In Progress", "Completed"]
+            combobox = ttk.Combobox(task_frame, values=status_choices, state="readonly", width=15)
+            combobox.set(status_choices[task.status])  # Menampilkan status awal berdasarkan nilai status task
+            combobox.grid(row=0, column=1, padx=10, pady=5)
+
+            # Update status saat memilih dropdown
+            combobox.bind("<<ComboboxSelected>>", lambda event, t=task: self.updateTaskStatus(event, t))
+
+            button_edit = CTkButton(
+                task_frame,
+                text="",
+                image=pencil,
+                width=5,
+                command=lambda t=task: self.edit(self.task_list, t)
+            )
+            button_edit.grid(row=0, column=2, padx=5, pady=5)
+
+            delete_button = CTkButton(
+                task_frame,
+                text="",
+                image=trash,
+                width=5,
+                command=lambda t=task: self.delete(self.task_list, t)
+            )
+            delete_button.grid(row=0, column=3, padx=5, pady=5)
+
+        button_add = CTkButton(
+            self.frame,
+            text="Add Task",
+            image=plus,
+            width=100,
+            command=lambda: self.create(self.task_list)
+        )
+        button_add.grid(row=idx + 1, column=0, columnspan=4, pady=10, padx=10)
+
+    def updateTaskStatus(self, event, task: Task):
+        # Mendapatkan status yang dipilih dari dropdown
+        status_str = event.widget.get()
+        status_choices = ["Not Started", "In Progress", "Completed"]
+        new_status = status_choices.index(status_str)  # Mendapatkan index untuk status
+
+        # Update status task
+        task.setStatus(new_status)
+        self.updateUI()  # Menyegarkan tampilan setelah perubahan status
 
     def showTaskDetails(self, task: Task):
         self.frame.destroy()
