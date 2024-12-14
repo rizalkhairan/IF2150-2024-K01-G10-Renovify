@@ -44,7 +44,7 @@ class DisplayTimeline:
 
         # Membuat kalender timeline
         calendar = Calendar(self.modal_window, selectmode='day',
-                            date_pattern='yyyy-mm-dd', font=("Arial", 11))
+                            date_pattern='dd-mm-yyyy', font=("Arial", 11))
         calendar.grid(row=1, column=0, padx=20, pady=10)
 
         # Menambahkan detail timeline proyek di bawah kalender
@@ -56,20 +56,23 @@ class DisplayTimeline:
         for project in projects_dates:
             name, start_date, end_date = project
             # Tandai tanggal mulai proyek pada kalender
-            start_date_obj = datetime.strptime(start_date, '%Y-%m-%d').date()
+            start_date_obj = datetime.strptime(start_date, '%d-%m-%Y').date()
             calendar.calevent_create(start_date_obj, name, 'project')
             # Tandai tanggal selesai proyek pada kalender
-            end_date_obj = datetime.strptime(end_date, '%Y-%m-%d').date()
+            end_date_obj = datetime.strptime(end_date, '%d-%m-%Y').date()
             calendar.calevent_create(end_date_obj, name, 'project')
 
         # Menambahkan tombol untuk menutup window
         button_close = ctk.CTkButton(self.modal_window, text="Close",
-                                     command=self.modal_window.destroy)
+                                     command=self.closeModal)
         button_close.grid(row=3, column=0, pady=10)
 
         # Menampilkan keterangan jadwal proyek pada tanggal yang diklik
         calendar.bind("<<CalendarSelected>>",
                       lambda event: self.showProjectDetails(calendar))
+
+        # Menangani event ketika modal window ditutup dengan tombol exit
+        self.modal_window.protocol("WM_DELETE_WINDOW", self.closeModal)
 
     # Menampilkan detail timeline proyek di bawah kalender
     def updateProjectInfo(self):
@@ -94,15 +97,15 @@ class DisplayTimeline:
     # Menampilkan detail jadwal proyek pada tanggal yang diklik di kalender
     def showProjectDetails(self, calendar):
         selected_date = calendar.get_date()
-        selected_date_obj = datetime.strptime(selected_date, '%Y-%m-%d').date()
+        selected_date_obj = datetime.strptime(selected_date, '%d-%m-%Y').date()
 
         projects_on_selected_date = [
             project for project in
             self.timeline_controller.getAllProjectDates()
             if selected_date_obj >= datetime.strptime(project[1],
-                                                      "%Y-%m-%d").date()
+                                                      "%d-%m-%Y").date()
             and selected_date_obj <= datetime.strptime(project[2],
-                                                       "%Y-%m-%d").date()
+                                                       "%d-%m-%Y").date()
         ]
 
         unique_projects = set()  # Menggunakan set untuk menghindari duplikasi
@@ -160,7 +163,7 @@ class DisplayTimeline:
 
     # Mengubah format YYYY-MM-DD menjadi string tanggal
     def format_date_to_words(self, date_str):
-        date_obj = datetime.strptime(date_str, '%Y-%m-%d')
+        date_obj = datetime.strptime(date_str, '%d-%m-%Y')
         day = date_obj.day
         month = date_obj.strftime('%B')
         year = date_obj.year
@@ -170,10 +173,14 @@ class DisplayTimeline:
             suffix = {1: 'st', 2: 'nd', 3: 'rd'}.get(day % 10, 'th')
         return f"{month} {day}{suffix} {year}"
 
+    def closeModal(self):
+        self.modal_window.destroy()  # Menutup window timeline
+        self.master.deiconify()  # Menampilkan kembali window master
+
 
 class TimelineController:
     def __init__(self):
-        self.db = DBConnection() 
+        self.db = DBConnection()
 
     def getAllProjectDates(self):
         with database.DBConnection() as db:
