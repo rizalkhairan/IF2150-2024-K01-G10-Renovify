@@ -9,6 +9,7 @@ class DBConnection:
     """
 
     def __init__(self, db_name='user_data.db'):
+        os.makedirs(os.path.join('data', 'user'), exist_ok=True)
         self.db_path = os.path.join('data', 'user', db_name)
 
         if os.path.exists(self.db_path):
@@ -45,11 +46,18 @@ class DBConnection:
             inspirations_table = """
             CREATE TABLE IF NOT EXISTS inspirations (
                 inspiration_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                project_id INTEGER,
                 name VARCHAR[100],
                 cached_image_path TEXT,
                 link TEXT,
-                FOREIGN KEY (project_id) REFERENCES projects(project_id)
+                date_updated VARCHAR[20]
+            );
+            """
+            tags_table = """
+            CREATE TABLE IF NOT EXISTS tags (
+                tag_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                inspiration_id INTEGER,
+                tag VARCHAR[20],
+                FOREIGN KEY (inspiration_id) REFERENCES inspirations(inspiration_id)
             );
             """
             expenses_table = """
@@ -65,6 +73,7 @@ class DBConnection:
             cur.execute(projects_table)
             cur.execute(tasks_table)
             cur.execute(inspirations_table)
+            cur.execute(tags_table)
             cur.execute(expenses_table)
             self.con.commit()
             cur.close()
@@ -158,16 +167,16 @@ class DBConnection:
         cur.close()
         return result
     
-    def createInspiration(self, project_id, name, cached_image_path, link):
-        cur = self.con.execute("INSERT INTO inspirations (project_id, name, cached_image_path, link) VALUES (?, ?, ?, ?)",
-                                (project_id, name, cached_image_path, link))
+    def createInspiration(self, name, cached_image_path, link, date_updated):
+        cur = self.con.execute("INSERT INTO inspirations (name, cached_image_path, link, date_updated) VALUES (?, ?, ?, ?)",
+                                (name, cached_image_path, link, date_updated))
         self.con.commit()
         cur.close()
         return
     
-    def editInspiration(self, inspiration_id, project_id, name, cached_image_path, link):
-        cur = self.con.execute("UPDATE inspirations SET project_id=?, name=?, cached_image_path=?, link=? WHERE inspiration_id=?",
-                                (project_id, name, cached_image_path, link, inspiration_id))
+    def editInspiration(self, inspiration_id, name, cached_image_path, link, date_updated):
+        cur = self.con.execute("UPDATE inspirations SET name=?, cached_image_path=?, link=?, date_updated=? WHERE inspiration_id=?",
+                                (name, cached_image_path, link, date_updated, inspiration_id))
         self.con.commit()
         cur.close()
         return
@@ -177,6 +186,28 @@ class DBConnection:
         self.con.commit()
         cur.close()
     
+    """ Operasi CRUD Tags """
+    def getAllTags(self, inspiration_id):
+        cur = self.con.execute("SELECT tag FROM tags WHERE inspiration_id=?", (inspiration_id,))
+        result = cur.fetchall()
+        cur.close()
+        tags = []
+        for row in result:
+            tags.append(row[0])
+        return tags
+    
+    def createTag(self, inspiration_id, tag):
+        cur = self.con.execute("INSERT INTO tags (inspiration_id, tag) VALUES (?, ?)", (inspiration_id, tag))
+        self.con.commit()
+        cur.close()
+        return
+    
+    def deleteTag(self, inspiration_id, tag):
+        cur = self.con.execute("DELETE FROM tags WHERE inspiration_id=? AND tag=?", (inspiration_id, tag))
+        self.con.commit()
+        cur.close()
+        return
+
     """ Operasi CRUD Expenses """
     def getAllExpensesOfProject(self, project_id):
         cur = self.con.execute("SELECT * FROM expenses WHERE project_id=?", (project_id,))
